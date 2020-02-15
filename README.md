@@ -28,7 +28,7 @@ We provide both the CSI data for all the above setups and the post-prcessed feat
 
 ## Channels
 
-The CSI data is placed under the **channels** folder and are named as *channels_<setuo_name_from_above>.mat*. These MATLAB files are stored using *HDF5* file structure and contain the following variables:
+The CSI data is placed under the **channels** folder and are named as *channels_<setup_name_from_above>.mat*. These MATLAB files are stored using *HDF5* file structure and contain the following variables:
 
 - **channels**: *[ n_datapoints x n_frequency x n_ant X n_ap ]* 4D complex channel matrix.
 - **RSSI**: *[ n_datapoints x n_ap ]* 2D recieved signal strenght matrix.
@@ -42,9 +42,9 @@ The CSI data is placed under the **channels** folder and are named as *channels_
 - **d1**: The sampled x-axis of the space under consideration
 - **d2**: The sampled y-axis of the space under consideration
 
-## Channels
+## Datasets
 
-The CSI data is placed under the **channels** folder and are named as *channels_<setuo_name_from_above>.mat*. These MATLAB files are stored using *HDF5* file structure and contain the following variables:
+The CSI data is placed under the **datasets** folder and are named as *features_<setup_name_from_above>.mat*. These MATLAB files are stored using *HDF5* file structure and contain the following variables:
 
 - **features_with_offset**: *[ n_datapoints x n_ap x n_d1_points X n_d2_points ]* 4D feature matrix for n_ap **with offsets** in time
 - **features_without_offset**: *[ n_datapoints x n_ap x n_d1_points X n_d2_points ]* 4D feature matrix for n_ap **without offsets** in time

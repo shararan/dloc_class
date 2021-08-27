@@ -24,11 +24,11 @@ import matplotlib.pyplot as plt
 import sys
 import ntpath
 import time
-from scipy.misc import imresize
+# from scipy.misc import imresize
 import json
 
 from Generators import *
-from LocationNetworks import *
+# from LocationNetworks import *
 
 def write_log(log_values, model_name, log_dir="", log_type='loss', type_write='a'):
     if not os.path.exists(log_dir):
@@ -39,11 +39,11 @@ def write_log(log_values, model_name, log_dir="", log_type='loss', type_write='a
 def get_model_funct(model_name):
     if model_name == "G":
         return define_G
-    else:
-        return define_L
+    # else:
+    #     return define_L
 
-def define_L(opt, gpu_ids):
-    return LocationNetwork()
+# def define_L(opt, gpu_ids):
+#     return LocationNetwork()
 
 def define_G(opt, gpu_ids):
     net = None
@@ -74,6 +74,12 @@ def define_G(opt, gpu_ids):
     elif net_type == 'resnet_decoder':
         n_blocks    = opt.resnet_blocks
         net = ResnetDecoder(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks, encoder_blocks=opt.encoder_res_blocks)
+    elif net_type == 'resnet_encoder_cat':
+        n_blocks    = opt.resnet_blocks
+        net = ResnetEncoderCat(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks)
+    elif net_type == 'resnet_decoder_cat':
+        n_blocks    = opt.resnet_blocks
+        net = ResnetDecoderCat(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks, encoder_blocks=opt.encoder_res_blocks)        
     elif net_type == 'unet_128':
         net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif net_type == 'unet_256':
@@ -193,3 +199,6 @@ class Flatten(nn.Module):
 
     def forward(self, x):
         return x.view(x.size(0), -1)
+
+def RGB2Gray(img):
+    return 0.2125*img[:,:,0] + 0.7154*img[:,:,1] + 0.0721*img[:,:,2]

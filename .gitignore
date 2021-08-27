@@ -2,7 +2,6 @@
 results/
 logs/
 runs/
-*.DS_Store
 
 # Compiled source #
 ###################

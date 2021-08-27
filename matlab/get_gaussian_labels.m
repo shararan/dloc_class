@@ -1,4 +1,5 @@
-function labels_gaussian = get_gaussian_labels(labels,sigma,x_vals,y_vals)
+function labels_gaussian = get_gaussian_labels(labels, sigma, x_vals, y_vals)
+    % labels: Nx2, xy ground truth location
     %x_vals and y_vals are 1 X N arrays of potential grid valuess
     n_xlabels = length(x_vals);
     n_ylabels =length(y_vals);

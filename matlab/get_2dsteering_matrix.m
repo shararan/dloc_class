@@ -1,28 +1,41 @@
-function S = get_2dsteering_matrix(theta_vals,d_vals,n_sub,f,df,ant_sep,n_ant) 
-%% SpotFi 2D Steering Matrix for the given theta_vals and d_vals
-% Inputs:
-% theta_vals: the search space for Angle of Arrival
-% d_vals: the search space for Time of Flight
-% n_sub: number of subcarriers
-% f: Center Frequency of the transmission
-% df: subcarrier bandwidth
-% ant_sep: antenna sepration on the AP
-% n_ant: number of receiving antennas
-% Ouputs:
-% S: 2D Steering vector for SpotFi
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Phi = zeros(n_ant-1,length(theta_vals));
-for i = 1:length(theta_vals)
-    phi_theta = exp(-1j*2*pi*f/3e8*sin(theta_vals(i))*ant_sep);
-    for j=1:n_ant-1
-        Phi(j,i) = phi_theta.^(j-1);
+function S = get_2dsteering_matrix(theta_vals,d_vals,opt)
+    %{
+    Defines the Steering Matrices given the required search space in theta_val
+    and d_vals. Refers to spotfi https://web.stanford.edu/~skatti/pubs/sigcomm15-spotfi.pdf
+    for details about formulation.
+    
+    Args:
+        theta_vals {vector, dim 1 x n} -- all possible AoA/AoD values.
+        d_vals {vector, dim 1 x n}     -- search space for all possible ToF
+        opt {struct}                   -- contains all constants.
+    
+    Return:
+        S {array} -- dim (n_antenna * n_sub/2) x (len(theta_vals) * len(d_vals))
+        steering matrix for all possible theta and d in search space.
+    %}
+    
+    % get all constants from opt
+    n_sub = length(opt.subcarrier_indices); % number of subcarriers.
+    f = opt.zeroFreq;                       % OFDM central frequency
+    df = median(diff(opt.freq));            % subcarrier spacing.
+    ant_sep = opt.ant_sep;                  % antenna separation.
+    
+    
+    % steering vector -> AoA, spotfi Eq. 2
+    Phi = zeros(2,length(theta_vals));
+    for i = 1:length(theta_vals)
+        phi_theta = exp(-1j*2*pi*f/3e8*sin(theta_vals(i))*ant_sep);
+        Phi(1,i) = 1;
+        Phi(2,i) = phi_theta;
+        Phi(3,i) = phi_theta.^2; % assumes there are three antennas
     end
-end
-Omega = zeros(n_sub/2,length(d_vals));
-for i = 1: length(d_vals)
-    omega_t = exp(-1j*2*pi*df*d_vals(i)/3e8);
-    Omega(:,i) = omega_t.^((1:n_sub/2)');
-end
-
-S = kron(Phi,Omega);
+    
+    % Omega -> ToF, spotFi Eq. 6
+    Omega = zeros(n_sub/2,length(d_vals));
+    for i = 1: length(d_vals)
+        omega_t = exp(-1j*2*pi*df*d_vals(i)/3e8);
+        Omega(:,i) = omega_t.^((1:n_sub/2)');
+    end
+    
+    S = kron(Phi,Omega);
 end

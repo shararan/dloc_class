@@ -3,32 +3,34 @@
 clearvars
 
 %% Tuneable Parameters
-OUTPUT_GRID_SIZE = 0.1; %the output grid size of each pixel
+GRID_SIZE = 0.1; %the output grid size of each pixel
 OUTPUT_SIGMA = 0.25; % the gaussian variance of the ouput gaussian target
 
 %% create x and y range
 x_range_max = 5;   % size of the field alone x direction
 y_range_max = 5;   % size of the field alone y direction
-d1 = 0:OUTPUT_GRID_SIZE:x_range_max; % x_range of image in meter
-d2 = 0:OUTPUT_GRID_SIZE:y_range_max; % y_range of image in meter
+d1 = 0:GRID_SIZE:x_range_max; % x_range of image in meter
+d2 = 0:GRID_SIZE:y_range_max; % y_range of image in meter
 
 %% load data
-% Input mat file should contain:
-% dataset_name (str): name of the dataset
-% channels (matrix): size = [n_point,n_sub,n_ant,n_ap], raw csi data
-% channels_tof_comp (matrix): size = [n_point,n_sub,n_ant,n_ap], csi data after tof compensation
-% opt (struct): constants such as subcarrier frequencies, subcarrier_indices, bandwidth, etc
-% theta_vals (array): aoa search space in radians
-% d_vals (array): tof search space in meter
-% xy_labels (array): size = [n_points, 2], xy ground turth labels
-
-% load(['channels_,',DATASET_NAME,'.mat']);
+data_path = "/Users/Charlie/Documents/Work_School/UCSD/RESEARCH/temp_data/phone_4AP/analysis/data_saved/results-phone_4AP-comp=1.mat";
+load(data_path, ...
+    'channels3_4D', ...   % size = [n_point,n_sub,n_ant,n_ap], raw csi data
+    'robot_xy', ...       % size = [n_points, 2], xy ground turth labels
+    'real_tof', ...       % size = [n_points, n_ap], real time of flight in m
+    'theta_vals',...      % aoa search space in radians
+    'd_vals',...          % tof search space in m
+    'opt',...             % struct, contain constants like freq, bandwidth, etc
+    'ap',...              % cell, xy coordinates of antennas on all access point
+    'dataset_name');      % str, name of dataset
 channels = channels3_4D(1:10,:,:,[1,3,5,7]);
 labels = robot_xy(1:10, :);
 [n_points,n_sub,n_ant,n_ap] = size(channels);
 
 %% Estimating AoA
 S = get_2dsteering_matrix(theta_vals,d_vals,opt);
+aoa_pred = zeros(n_points, n_ap);
+d_pred = zeros(n_points, n_ap);
 
 for i=1:n_points
     [aoa_pred(i,:),d_pred(i,:)] = get_least_tofs_aoa(...
@@ -44,6 +46,7 @@ for i=1:n_points
 end
 
 %% Real ToF compensation
+channels_wo_offset = zeros(size(channels));
 for i=1:n_points
     parfor j=1:n_ap
         channels_wo_offset(i,:,:,j) = squeeze(channels(i,:,:,j)).*...
@@ -56,8 +59,8 @@ max_x = 3*d1(end)/2;
 max_y = 3*d2(end)/2;
 min_x = -d1(end)/2;
 min_y = -d2(end)/2;
-d1 = min_x:input_grid_size:max_x;
-d2 = min_y:input_grid_size:max_y;
+d1 = min_x:GRID_SIZE:max_x;
+d2 = min_y:GRID_SIZE:max_y;
 
 features_w_offset = zeros(n_points,n_ap,length(d2),length(d1));
 features_wo_offset = zeros(n_points,n_ap,length(d2),length(d1));
@@ -85,13 +88,14 @@ parfor i=1:n_points
     end
 end
 
-% labels: Nx2
+%% create ground truth label for traning
 labels_gaussian_2d = get_gaussian_labels(labels,...
     OUTPUT_SIGMA,...
     d1,...
     d2);
 
-save(['dataset_',DATASET_NAME,'.mat'], ...
+%% save all data
+save(sprintf('dataset_%s.mat',dataset_name), ...
     'features_with_offset',...
     'features_without_offset',...
     'labels_gaussian_2d',...

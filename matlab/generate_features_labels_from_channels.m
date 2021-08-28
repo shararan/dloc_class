@@ -23,17 +23,16 @@ load(data_path, ...
     'opt',...             % struct, contain constants like freq, bandwidth, etc
     'ap',...              % cell, xy coordinates of antennas on all access point
     'dataset_name');      % str, name of dataset
-channels = channels3_4D(1:10,:,:,[1,3,5,7]);
-labels = robot_xy(1:10, :);
+channels = channels3_4D(1:3,:,:,[1,3,5,7]);
+labels = robot_xy(1:3, :);
 [n_points,n_sub,n_ant,n_ap] = size(channels);
 
 %% Estimating AoA
 S = get_2dsteering_matrix(theta_vals,d_vals,opt);
-aoa_pred = zeros(n_points, n_ap);
 d_pred = zeros(n_points, n_ap);
 
 for i=1:n_points
-    [aoa_pred(i,:),d_pred(i,:)] = get_least_tofs_aoa(...
+    [~,d_pred(i,:)] = get_least_tofs_aoa(...
         squeeze(channels(i,:,:,:)),...
         theta_vals,...
         d_vals,...

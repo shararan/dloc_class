@@ -75,7 +75,7 @@ def train(model, train_loader, test_loader, input_index=1, output_index=2, offse
         model.offset_decoder.update_learning_rate()
 
 
-def test(model, test_loader, input_index=1, output_index=2,  offset_output_index=0, max_data_to_run = -1, save_output=True, log=True):
+def test(model, test_loader, input_index=1, output_index=2,  offset_output_index=0, save_name="decoder_test_result", save_output=True, log=True):
     print('Evaluation Called')
     model.eval()
     generated_outputs = []
@@ -86,14 +86,16 @@ def test(model, test_loader, input_index=1, output_index=2,  offset_output_index
     for i, data in enumerate(test_loader):
             model.set_input(data[input_index], data[output_index], data[offset_output_index],convert_enc=True, shuffle_channel=False)
             model.test()
-            gen_outputs = model.decoder.output
-            off_outputs = model.offset_decoder.output
+
+            # get model outputs
+            gen_outputs = model.decoder.output  # gen_outputs.size = (N,1,H,W)
+            off_outputs = model.offset_decoder.output # off_outputs.size = (N,n_ap,H,W)
+
             generated_outputs.extend(gen_outputs.data.cpu().numpy())
             offset_outputs.extend(off_outputs.data.cpu().numpy())
             error.extend(localization_error(gen_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
             total_loss += model.decoder.loss.item()
             total_offset_loss += model.offset_decoder.loss.item()
-    print("saving")
     total_loss /= i
     total_offset_loss /= i
     median_error = np.median(error)
@@ -110,10 +112,11 @@ def test(model, test_loader, input_index=1, output_index=2,  offset_output_index
     if save_output:
         if not os.path.exists(model.decoder.results_save_dir):
             os.makedirs(model.decoder.results_save_dir, exist_ok=True)
-        hdf5storage.savemat(model.decoder.results_save_dir+"/"+model.decoder.model_name+".mat",
-            mdict={"outputs":generated_outputs,"wo_outputs":offset_outputs}, 
+        save_path = f"{model.decoder.results_save_dir}/{save_name}.mat"
+        hdf5storage.savemat(save_path,
+            mdict={"outputs":generated_outputs,"wo_outputs":offset_outputs, "error": error}, 
             appendmat=True, 
             format='7.3',
             truncate_existing=True)
-
+        print(f"result saved in {save_path}")
     return total_loss, median_error

@@ -10,8 +10,8 @@ TEST_SPLIT = 0.2;    % percentage for test set
 
 %% load data
 % change this for each dataset
-data_path = "/Users/Charlie/Documents/Work_School/UCSD/RESEARCH/temp_data/phone_4AP/analysis/data_saved/results-phone_4AP-comp=1.mat";
-x_range_max = 10;   % size of the field alone x direction
+data_path = "/media/ehdd_8t1/chenfeng/phone_data/results-phone_4AP-comp=1.mat";
+x_range_max = 5;   % size of the field alone x direction
 y_range_max = 5;   % size of the field alone y direction
 
 load(data_path, ...
@@ -26,14 +26,14 @@ load(data_path, ...
     'd_pred');            % tof prediction in meter
 
 %% reformat data
-channels1 = channels3_4D(1:10,:,:,[1,3,5,7]);
-channels2 = channels3_4D(1:10,:,:,[2,4,6,8]);
-d_pred1 = d_pred(1:10,[1,3,5,7]);
-d_pred2 = d_pred(1:10,[2,4,6,8]);
+channels1 = channels3_4D(:,:,:,[1,3,5,7]);
+channels2 = channels3_4D(:,:,:,[2,4,6,8]);
+d_pred1 = d_pred(:,[1,3,5,7]);
+d_pred2 = d_pred(:,[2,4,6,8]);
 channels = cat(1, channels1, channels2);
 d_pred = cat(1, d_pred1, d_pred2);
-labels = repmat(robot_xy(1:10,:), [2 1]);
-real_tof = repmat(real_tof(1:10,:), [2 1]);
+labels = repmat(robot_xy, [2 1]);
+real_tof = repmat(real_tof, [2 1]);
 
 %% create variables 
 d1 = 0:GRID_SIZE:x_range_max; % x_range of image in meter
@@ -134,32 +134,32 @@ labels_test = labels(test_idxs,:);
 
 % rename train data
 clear features_with_offset features_without_offset labels_gaussian_2d labels
-features_with_offset = features_with_offset_train;
-features_without_offset = features_without_offset_train;
+features_w_offset = features_with_offset_train;
+features_wo_offset = features_without_offset_train;
 labels_gaussian_2d = labels_gaussian_2d_train;
 labels = labels_train;
 
 % save train data
 dataset_train_name = sprintf('dataset_%s_train.mat',dataset_name);
 save(fullfile(save_dir, dataset_train_name), ...
-    'features_with_offset',...
-    'features_without_offset',...
+    'features_w_offset',...
+    'features_wo_offset',...
     'labels_gaussian_2d',...
     'labels',...
     '-v7.3');
 
 % rename test data
-clear features_with_offset features_without_offset labels_gaussian_2d labels
-features_with_offset = features_with_offset_test;
-features_without_offset = features_without_offset_test;
+clear features_w_offset features_wo_offset labels_gaussian_2d labels
+features_w_offset = features_with_offset_test;
+features_wo_offset = features_without_offset_test;
 labels_gaussian_2d = labels_gaussian_2d_test;
 labels = labels_test;
 
 % save test data
 dataset_test_name = sprintf('dataset_%s_test.mat',dataset_name);
 save(fullfile(save_dir, dataset_test_name), ...
-    'features_with_offset',...
-    'features_without_offset',...
+    'features_w_offset',...
+    'features_wo_offset',...
     'labels_gaussian_2d',...
     'labels',...
     '-v7.3');

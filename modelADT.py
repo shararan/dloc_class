@@ -176,8 +176,12 @@ class ModelADT():
 
     # load models from the disk
     def load_networks(self, epoch):
-        name = self.model_name
-        load_filename = '%s_net_%s.pth' % (epoch, name)
+        """
+        epoch (int/str): epoch index / "best" / "latest"
+        """
+        assert isinstance(epoch,int) or epoch=="best" or epoch=="latest"
+        
+        load_filename = f'{epoch}_net_{self.model_name}.pth' 
         load_path = os.path.join(self.load_dir, load_filename)
         net = self.net
         if isinstance(net, torch.nn.DataParallel):

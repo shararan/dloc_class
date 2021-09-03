@@ -9,8 +9,7 @@ opt_exp.isTrainGen = True
 opt_exp.isTrainLoc = True
 opt_exp.isFrozen = False
 opt_exp.isFrozen_gen = False
-opt_exp.n_epochs = 1
-opt_exp.data = "rw_to_rw_env"
+opt_exp.n_epochs = 50
 opt_exp.gpu_ids = ['1','2','3','0']
 
 # ------ name of experiment ----------
@@ -22,10 +21,10 @@ if opt_exp.location == "server":
     opt_exp.checkpoints_dir = './checkpoints_z50' + "/" + opt_exp.save_name#type=str, default='./checkpoints', help='models are saved here')
 
 if opt_exp.location == "machine":
-    opt_exp.checkpoints_dir = '/media/ehdd_8t1/chenfeng/DLoc_phone/runs' + "/" + opt_exp.save_name #type=str, default='./checkpoints', help='models are saved here')
+    opt_exp.checkpoints_dir = '/media/ehdd_8t1/chenfeng/DLoc_code/runs' + "/" + opt_exp.save_name #type=str, default='./checkpoints', help='models are saved here')
     opt_exp.results_dir = opt_exp.checkpoints_dir
     opt_exp.log_dir = opt_exp.checkpoints_dir
-    opt_exp.load_dir = '/media/ehdd_8t1/chenfeng/DLoc_phone/runs' + "/" + opt_exp.eval_name 
+    opt_exp.load_dir = '/media/ehdd_8t1/chenfeng/DLoc_code/runs' + "/" + opt_exp.eval_name 
     
 opt_exp.batch_size = 16
 opt_exp.ds_step_trn = 1
@@ -76,7 +75,7 @@ opt_encoder.num_threads = 4 #default=4, type=int, help='# threads for loading da
 opt_encoder.checkpoints_load_dir =  opt_encoder.parent_exp.load_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_encoder.checkpoints_save_dir =  opt_encoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_encoder.results_dir = opt_encoder.parent_exp.results_dir
-opt_encoder.log_dir =  opt_encoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
+opt_encoder.log_dir =  opt_encoder.parent_exp.log_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_encoder.max_dataset_size = float("inf") #type=int, default=float("inf"), help='Maximum number of samples allowed per dataset. If the dataset directory contains more than max_dataset_size, only a subset is loaded.')
 opt_encoder.verbose = False  #action='store_true', help='if specified, print more debugging information')
 opt_encoder.suffix ='' #default='', type=str, help='customized suffix: opt.name = opt.name + suffix: e.g., {model}_{netG}_size{loadSize}')
@@ -96,7 +95,7 @@ opt_decoder.init_type = 'xavier' #type=str, default='normal', help='network init
 opt_decoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_decoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_decoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_decoder.lr = 0.000001 #type=float, default=0.0002, help='initial learning rate for adam')
+opt_decoder.lr = opt_encoder.lr  #type=float, default=0.0002, help='initial learning rate for adam')
 opt_decoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_decoder.lr_decay_iters = 20 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_decoder.lambda_L = 1 # weightage given to the Generator
@@ -127,7 +126,7 @@ opt_decoder.num_threads = 4 #default=4, type=int, help='# threads for loading da
 opt_decoder.checkpoints_load_dir =  opt_decoder.parent_exp.load_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_decoder.checkpoints_save_dir =  opt_decoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_decoder.results_dir = opt_decoder.parent_exp.results_dir
-opt_decoder.log_dir =  opt_decoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
+opt_decoder.log_dir =  opt_decoder.parent_exp.log_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_decoder.verbose = False #action='store_true', help='if specified, print more debugging information')
 opt_decoder.suffix ='' #default='', type=str, help='customized suffix: opt.name = opt.name + suffix: e.g., {model}_{netG}_size{loadSize}')
 
@@ -177,6 +176,6 @@ opt_offset_decoder.num_threads = 4 #default=4, type=int, help='# threads for loa
 opt_offset_decoder.checkpoints_load_dir =  opt_offset_decoder.parent_exp.load_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_offset_decoder.checkpoints_save_dir =  opt_offset_decoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_offset_decoder.results_dir = opt_offset_decoder.parent_exp.results_dir
-opt_offset_decoder.log_dir =  opt_offset_decoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
+opt_offset_decoder.log_dir =  opt_offset_decoder.parent_exp.log_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_offset_decoder.verbose = False#action='store_true', help='if specified, print more debugging information')
 opt_offset_decoder.suffix ='' #default='', type=str, help='customized suffix: opt.name = opt.name + suffix: e.g., {model}_{netG}_size{loadSize}')

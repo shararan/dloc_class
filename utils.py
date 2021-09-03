@@ -172,26 +172,21 @@ def init_net(net, init_type='normal', init_gain=1, gpu_ids=[]):
     return net
 
 def localization_error(output_predictions,input_labels,scale=0.1):
-    outputs = np.squeeze(output_predictions)
-    inputs = np.squeeze(input_labels)
-    image_size = outputs.shape
-    error = np.zeros((image_size[0]))
-    if(image_size[0]==161):
-        label_temp = inputs
-        pred_temp = outputs
+    """
+    output_predictions: (N,1,H,W), model prediciton 
+    input_labels: (N,1,H,W), ground turth target
+    """
+    image_size = output_predictions.shape
+    error = np.zeros(image_size[0])
+
+    for i in range(image_size[0]):
+        label_temp = input_labels[i,:,:,:].squeeze() # ground truth label
+        pred_temp = output_predictions[i,:,:,:].squeeze() # model prediction
         label_index = np.asarray(np.unravel_index(np.argmax(label_temp), label_temp.shape))
         prediction_index = np.asarray(np.unravel_index(np.argmax(pred_temp),pred_temp.shape))
-        error[0] = np.sqrt( np.sum( np.power(np.multiply( label_index-prediction_index, scale ), 2)) )
-        return error
-    else:
-        for i in range(image_size[0]):
-
-            label_temp = inputs[i,:,:].squeeze()
-            pred_temp = outputs[i,:,:].squeeze()
-            label_index = np.asarray(np.unravel_index(np.argmax(label_temp), label_temp.shape))
-            prediction_index = np.asarray(np.unravel_index(np.argmax(pred_temp),pred_temp.shape))
-            error[i] = np.sqrt( np.sum( np.power(np.multiply( label_index-prediction_index, scale ), 2)) )
-        return error
+        error[i] = np.sqrt( np.sum( np.power(np.multiply( label_index-prediction_index, scale ), 2)) )
+    
+    return error
 
 class Flatten(nn.Module):
     def __init__(self):

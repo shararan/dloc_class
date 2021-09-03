@@ -247,7 +247,9 @@ class rw_to_rw_Dataset_tst_(Dataset):
 
 
 def load_data(filename,start,stop,step,ds_step):
-
+    """
+    filename (str): path to data (.mat file)
+    """
     if opt_exp.location == "machine":
         print('Loading ',filename)
         f = h5py.File(filename,'r')

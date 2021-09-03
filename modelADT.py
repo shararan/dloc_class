@@ -175,14 +175,20 @@ class ModelADT():
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     # load models from the disk
-    def load_networks(self, epoch):
+    def load_networks(self, epoch, load_dir=""):
         """
         epoch (int/str): epoch index / "best" / "latest"
         """
         assert isinstance(epoch,int) or epoch=="best" or epoch=="latest"
-        
-        load_filename = f'{epoch}_net_{self.model_name}.pth' 
-        load_path = os.path.join(self.load_dir, load_filename)
+        load_filename = f'{epoch}_net_{self.model_name}.pth'
+
+        if load_dir:
+            # use given load dir
+            load_path = os.path.join(load_dir, self.model_name, load_filename) 
+        else:
+            # use default load dir
+            load_path = os.path.join(self.load_dir, load_filename)
+
         net = self.net
         if isinstance(net, torch.nn.DataParallel):
             net = net.module

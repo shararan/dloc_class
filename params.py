@@ -1,5 +1,6 @@
 from easydict import EasyDict as edict
 import time
+from os.path import join
 opt_exp = edict()
 
 opt_exp.isTrain = True
@@ -14,17 +15,16 @@ opt_exp.gpu_ids = ['1','2','3','0']
 
 # ------ name of experiment ----------
 opt_exp.save_name = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()) # experiment name when train.py is ran
-opt_exp.eval_name = "2021-08-26-14:54:29"   # which experiemnt to evaluate when eval.py is ran
-
 opt_exp.location = "machine" # "machine" or "server"
+
 if opt_exp.location == "server":
     opt_exp.checkpoints_dir = './checkpoints_z50' + "/" + opt_exp.save_name#type=str, default='./checkpoints', help='models are saved here')
 
 if opt_exp.location == "machine":
-    opt_exp.checkpoints_dir = '/media/ehdd_8t1/chenfeng/DLoc_code/runs' + "/" + opt_exp.save_name #type=str, default='./checkpoints', help='models are saved here')
+    opt_exp.checkpoints_dir = join('/media/ehdd_8t1/chenfeng/DLoc_code/runs', opt_exp.save_name) #models are saved here
     opt_exp.results_dir = opt_exp.checkpoints_dir
     opt_exp.log_dir = opt_exp.checkpoints_dir
-    opt_exp.load_dir = '/media/ehdd_8t1/chenfeng/DLoc_code/runs' + "/" + opt_exp.eval_name 
+    opt_exp.load_dir = opt_exp.checkpoints_dir
     
 opt_exp.batch_size = 16
 opt_exp.ds_step_trn = 1
@@ -145,7 +145,7 @@ opt_offset_decoder.init_type = 'xavier' #type=str, default='normal', help='netwo
 opt_offset_decoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_offset_decoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_offset_decoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_offset_decoder.lr = 0.000001 #type=float, default=0.0002, help='initial learning rate for adam')
+opt_offset_decoder.lr = opt_encoder.lr #type=float, default=0.0002, help='initial learning rate for adam')
 opt_offset_decoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_offset_decoder.lr_decay_iters = 20 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_offset_decoder.lambda_L = 1 # weightage given to the Generator

@@ -10,6 +10,8 @@ from data_loader import load_data
 from joint_model import Enc_2Dec_Network
 from params import *
 import trainer
+torch.manual_seed(0)
+np.random.seed(0)
 
 # data path
 # trainpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_edit_jacobs_July28.mat']

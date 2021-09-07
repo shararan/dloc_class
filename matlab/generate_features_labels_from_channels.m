@@ -4,7 +4,7 @@ clear all;
 
 %% Tuneable Parameters
 GRID_SIZE = 0.1;     % the output grid size of each pixel
-OUTPUT_SIGMA = 0.25; % the gaussian variance of the ouput gaussian target
+OUTPUT_SIGMA = 0.25; % the gaussian variance of the output gaussian target
 TRAIN_SPLIT = 0.8;   % percentage for train set
 TEST_SPLIT = 0.2;    % percentage for test set
 
@@ -16,7 +16,7 @@ y_range_max = 5;   % size of the field alone y direction
 
 load(data_path, ...
     'channels3_4D', ...   % size = [n_point,n_sub,n_ant,n_ap], raw csi data
-    'robot_xy', ...       % size = [n_points, 2], xy ground turth labels
+    'robot_xy', ...       % size = [n_points, 2], xy ground truth labels
     'real_tof', ...       % size = [n_points, n_ap], real time of flight in m
     'theta_vals',...      % aoa search space in radians
     'd_vals',...          % tof search space in m
@@ -101,7 +101,7 @@ for i=1:n_points
     end
 end
 
-%% create ground truth label for traning
+%% create ground truth label for training
 labels_gaussian_2d = get_gaussian_labels(labels,...
     OUTPUT_SIGMA,...
     d1,...

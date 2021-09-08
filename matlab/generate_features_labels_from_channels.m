@@ -1,21 +1,20 @@
 %% This script convert csi channels to features and labels for Dloc traning
 % Tuneable Parameters
 GRID_SIZE = 0.1;     % the output grid size of each pixel
-OUTPUT_SIGMA = 0.25; % the gaussian variance of the ouput gaussian target
+OUTPUT_SIGMA = 0.25; % the gaussian variance of the output gaussian target
 TRAIN_SPLIT = 0.8;   % percentage for train set
 TEST_SPLIT = 0.2;    % percentage for test set
 
 %% dataset setting
 % change this for each dataset
-data_path = "/Users/Charlie/Documents/Work_School/UCSD/RESEARCH/temp_data/phone_4AP/analysis/data_saved/results-phone_4AP-comp=1.mat";
-x_max = 10;   % size of the field alone x direction
+data_path = "/media/ehdd_8t1/chenfeng/phone_data/results-phone_4AP-comp=1.mat";
+x_max = 5;   % size of the field alone x direction
 y_max = 5;   % size of the field alone y direction
-test_zone = {}; % bounding box for test area, {[x_min,x_max,y_min,y_max], [x_min,x_max,y_min,y_max]...}
 
 %% load data
 load(data_path, ...
     'channels3_4D', ...   % size = [n_point,n_sub,n_ant,n_ap], raw csi data
-    'robot_xy', ...       % size = [n_points, 2], xy ground turth labels
+    'robot_xy', ...       % size = [n_points, 2], xy ground truth labels
     'real_tof', ...       % size = [n_points, n_ap], real time of flight in m
     'theta_vals',...      % aoa search space in radians
     'd_vals',...          % tof search space in m
@@ -25,14 +24,14 @@ load(data_path, ...
     'd_pred');            % tof prediction in meter
 
 %% reformat data
-channels1 = channels3_4D(1:10,:,:,[1,3,5,7]);
-channels2 = channels3_4D(1:10,:,:,[2,4,6,8]);
-d_pred1 = d_pred(1:10,[1,3,5,7]);
-d_pred2 = d_pred(1:10,[2,4,6,8]);
+channels1 = channels3_4D(:,:,:,[1,3,5,7]);
+channels2 = channels3_4D(:,:,:,[2,4,6,8]);
+d_pred1 = d_pred(:,[1,3,5,7]);
+d_pred2 = d_pred(:,[2,4,6,8]);
 channels = cat(1, channels1, channels2);
 d_pred = cat(1, d_pred1, d_pred2);
-labels = repmat(robot_xy(1:10,:), [2 1]);
-real_tof = repmat(real_tof(1:10,:), [2 1]);
+labels = repmat(robot_xy, [2 1]);
+real_tof = repmat(real_tof, [2 1]);
 
 %% create variables 
 d1 = 0:GRID_SIZE:x_max; % x_range of image in meter
@@ -100,7 +99,7 @@ for i=1:n_points
     end
 end
 
-%% create ground truth label for traning
+%% create ground truth label for training
 labels_gaussian_2d = get_gaussian_labels(labels,...
     OUTPUT_SIGMA,...
     d1,...
@@ -133,32 +132,32 @@ labels_test = labels(test_idxs,:);
 
 % rename train data
 clear features_with_offset features_without_offset labels_gaussian_2d labels
-features_with_offset = features_with_offset_train;
-features_without_offset = features_without_offset_train;
+features_w_offset = features_with_offset_train;
+features_wo_offset = features_without_offset_train;
 labels_gaussian_2d = labels_gaussian_2d_train;
 labels = labels_train;
 
 % save train data
 dataset_train_name = sprintf('dataset_%s_train.mat',dataset_name);
 save(fullfile(save_dir, dataset_train_name), ...
-    'features_with_offset',...
-    'features_without_offset',...
+    'features_w_offset',...
+    'features_wo_offset',...
     'labels_gaussian_2d',...
     'labels',...
     '-v7.3');
 
 % rename test data
-clear features_with_offset features_without_offset labels_gaussian_2d labels
-features_with_offset = features_with_offset_test;
-features_without_offset = features_without_offset_test;
+clear features_w_offset features_wo_offset labels_gaussian_2d labels
+features_w_offset = features_with_offset_test;
+features_wo_offset = features_without_offset_test;
 labels_gaussian_2d = labels_gaussian_2d_test;
 labels = labels_test;
 
 % save test data
 dataset_test_name = sprintf('dataset_%s_test.mat',dataset_name);
 save(fullfile(save_dir, dataset_test_name), ...
-    'features_with_offset',...
-    'features_without_offset',...
+    'features_w_offset',...
+    'features_wo_offset',...
     'labels_gaussian_2d',...
     'labels',...
     '-v7.3');

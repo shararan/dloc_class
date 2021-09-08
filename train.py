@@ -10,10 +10,14 @@ from data_loader import load_data
 from joint_model import Enc_2Dec_Network
 from params import *
 import trainer
+torch.manual_seed(0)
+np.random.seed(0)
 
 # data path
-trainpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_edit_jacobs_July28.mat']
-testpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_fov_test_jacobs_July28_2.mat']
+# trainpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_edit_jacobs_July28.mat']
+# testpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_fov_test_jacobs_July28_2.mat']
+trainpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_train.mat']
+testpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_test.mat']
 
 # init encoder
 enc_model = ModelADT()
@@ -49,7 +53,7 @@ train_loader =torch.utils.data.DataLoader(train_data, batch_size=opt_exp.batch_s
 print(f"A_train.shape: {A_train.shape}")
 print(f"B_train.shape: {B_train.shape}")
 print(f"labels_train.shape: {labels_train.shape}")
-print('#training images = %d' % len(train_loader))
+print('# training mini batch = %d' % len(train_loader))
 
 # load testing data
 B_test,A_test,labels_test = load_data(testpath[0], 0, 0, 0, 1)
@@ -66,7 +70,7 @@ test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_siz
 print(f"A_test.shape: {A_test.shape}")
 print(f"B_test.shape: {B_test.shape}")
 print(f"labels_test.shape: {labels_test.shape}")
-print('#testing images = %d' % len(test_loader))
+print('# testing mini batch = %d' % len(test_loader))
 print('Test Data Loaded')
 
 if opt_exp.isFrozen:
@@ -75,4 +79,4 @@ if opt_exp.isFrozen:
     offset_dec_model.load_networks(opt_offset_decoder.starting_epoch_count)
 
 # train the model
-trainer.train(joint_model, train_loader, test_loader, input_index=1, output_index=2, offset_output_index=0)
+trainer.train(joint_model, train_loader, test_loader)

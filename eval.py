@@ -12,8 +12,9 @@ from params import *
 import trainer
 
 # data path and best epoch
-testpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_fov_test_jacobs_July28_2.mat']     
-best_epoch = 1
+testpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_test.mat']
+eval_name = "/media/ehdd_8t1/chenfeng/runs/2021-08-30-20:49:31" # experiment to evaluate
+epoch = "best"
 
 # init encoder
 enc_model = ModelADT()
@@ -47,20 +48,19 @@ for i in range(len(testpath)-1):
 labels_test = torch.unsqueeze(labels_test, 1)
 test_data = torch.utils.data.TensorDataset(B_test, A_test, labels_test)
 test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=False)
-print('#training images = %d' % len(test_loader))
+print('# testing mini batch = %d' % len(test_loader))
 
 # load network
-enc_model.load_networks(best_epoch)
-dec_model.load_networks(best_epoch)
-offset_dec_model.load_networks(best_epoch)
+enc_model.load_networks(epoch, load_dir=eval_name)
+dec_model.load_networks(epoch, load_dir=eval_name)
+offset_dec_model.load_networks(epoch, load_dir=eval_name)
 joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, frozen_dec = opt_exp.isFrozen, gpu_ids = opt_exp.gpu_ids)
 
 # pass data through model
 total_loss, median_error = trainer.test(joint_model, 
     test_loader, 
-    input_index=1, 
-    output_index=2, 
-    offset_output_index=0, 
-    save_output=False, 
+    save_output=True,
+    save_dir=eval_name,
+    save_name=f"decoder_test_result_epoch_{epoch}",
     log=False)
 print(f"total_loss: {total_loss}, median_error: {median_error}")

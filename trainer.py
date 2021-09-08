@@ -9,12 +9,17 @@ from utils import *
 from Generators import *
 from params import *
 
-def train(model, train_loader, test_loader, input_index=1, output_index=2, offset_output_index=0):
+def train(model, train_loader, test_loader):
+    # set data index
+    offset_output_index=0
+    input_index=1
+    output_index=2
+    
+    # initialization
     total_steps = 0
     print('Training called')
-    # generator_outputs = []
-    # location_outputs = []
     stopping_count = 0
+
     for epoch in range(model.opt.starting_epoch_count+1, model.opt.n_epochs+1): # opt.niter + opt.niter_decay + 1):
         epoch_start_time = time.time()
         epoch_loss = 0
@@ -75,9 +80,29 @@ def train(model, train_loader, test_loader, input_index=1, output_index=2, offse
         model.offset_decoder.update_learning_rate()
 
 
-def test(model, test_loader, input_index=1, output_index=2,  offset_output_index=0, max_data_to_run = -1, save_output=True, log=True):
+def test(model, test_loader, save_output=True, save_name="decoder_test_result", save_dir="", log=True):
+    """Test and evaluation pipeline
+
+    Args:
+        model (torch.module): pytorch model
+        test_loader (torch.dataloader): dataloader
+        save_output (bool, optional): whether to save output to mat file. Defaults to True.
+        save_name (str, optional): name of the mat file. Defaults to "decoder_test_result".
+        save_dir (str, optional): directory where output mat file is saved. Defaults to "".
+        log (bool, optional): whether to log output. Defaults to True.
+
+    Returns:
+        tuple: (total_loss -> float, median_error -> float)
+    """
     print('Evaluation Called')
     model.eval()
+
+    # set data index
+    offset_output_index=0
+    input_index=1
+    output_index=2
+
+    # create containers
     generated_outputs = []
     offset_outputs = []
     total_loss = 0
@@ -86,14 +111,16 @@ def test(model, test_loader, input_index=1, output_index=2,  offset_output_index
     for i, data in enumerate(test_loader):
             model.set_input(data[input_index], data[output_index], data[offset_output_index],convert_enc=True, shuffle_channel=False)
             model.test()
-            gen_outputs = model.decoder.output
-            off_outputs = model.offset_decoder.output
+
+            # get model outputs
+            gen_outputs = model.decoder.output  # gen_outputs.size = (N,1,H,W)
+            off_outputs = model.offset_decoder.output # off_outputs.size = (N,n_ap,H,W)
+
             generated_outputs.extend(gen_outputs.data.cpu().numpy())
             offset_outputs.extend(off_outputs.data.cpu().numpy())
             error.extend(localization_error(gen_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
             total_loss += model.decoder.loss.item()
             total_offset_loss += model.offset_decoder.loss.item()
-    print("saving")
     total_loss /= i
     total_offset_loss /= i
     median_error = np.median(error)
@@ -108,12 +135,17 @@ def test(model, test_loader, input_index=1, output_index=2,  offset_output_index
         write_log([str(total_offset_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_offset_loss')
 
     if save_output:
-        if not os.path.exists(model.decoder.results_save_dir):
-            os.makedirs(model.decoder.results_save_dir, exist_ok=True)
-        hdf5storage.savemat(model.decoder.results_save_dir+"/"+model.decoder.model_name+".mat",
-            mdict={"outputs":generated_outputs,"wo_outputs":offset_outputs}, 
+        if not save_dir:
+            save_dir = model.decoder.results_save_dir
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir, exist_ok=True)
+        
+        save_path = f"{save_dir}/{save_name}.mat"
+        hdf5storage.savemat(save_path,
+            mdict={"outputs":generated_outputs,"wo_outputs":offset_outputs, "error": error}, 
             appendmat=True, 
             format='7.3',
             truncate_existing=True)
-
+        print(f"result saved in {save_path}")
     return total_loss, median_error

@@ -1,19 +1,18 @@
-%% Script that converts channels to features and labels for Dloc
-% loads the dataset from DATASET_NAME and saves the datasets
-clear all;
-
-%% Tuneable Parameters
+%% This script convert csi channels to features and labels for Dloc traning
+% Tuneable Parameters
 GRID_SIZE = 0.1;     % the output grid size of each pixel
 OUTPUT_SIGMA = 0.25; % the gaussian variance of the ouput gaussian target
 TRAIN_SPLIT = 0.8;   % percentage for train set
 TEST_SPLIT = 0.2;    % percentage for test set
 
-%% load data
+%% dataset setting
 % change this for each dataset
 data_path = "/Users/Charlie/Documents/Work_School/UCSD/RESEARCH/temp_data/phone_4AP/analysis/data_saved/results-phone_4AP-comp=1.mat";
-x_range_max = 10;   % size of the field alone x direction
-y_range_max = 5;   % size of the field alone y direction
+x_max = 10;   % size of the field alone x direction
+y_max = 5;   % size of the field alone y direction
+test_zone = {}; % bounding box for test area, {[x_min,x_max,y_min,y_max], [x_min,x_max,y_min,y_max]...}
 
+%% load data
 load(data_path, ...
     'channels3_4D', ...   % size = [n_point,n_sub,n_ant,n_ap], raw csi data
     'robot_xy', ...       % size = [n_points, 2], xy ground turth labels
@@ -36,8 +35,8 @@ labels = repmat(robot_xy(1:10,:), [2 1]);
 real_tof = repmat(real_tof(1:10,:), [2 1]);
 
 %% create variables 
-d1 = 0:GRID_SIZE:x_range_max; % x_range of image in meter
-d2 = 0:GRID_SIZE:y_range_max; % y_range of image in meter
+d1 = 0:GRID_SIZE:x_max; % x_range of image in meter
+d2 = 0:GRID_SIZE:y_max; % y_range of image in meter
 [n_points,n_sub,n_ant,n_ap] = size(channels);
 
 %% Estimating AoA

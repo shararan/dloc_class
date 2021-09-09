@@ -14,7 +14,7 @@ import trainer
 # data path and best epoch
 testpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_test.mat']
 eval_name = "/media/ehdd_8t1/chenfeng/runs/2021-08-30-20:49:31" # experiment to evaluate
-epoch = "best"
+epoch = "best"  # int/"best"/"last"
 
 # init encoder
 enc_model = ModelADT()

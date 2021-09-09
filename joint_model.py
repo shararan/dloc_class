@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import torch
-import os
 from utils import *
 from Generators import *
 from data_loader import *

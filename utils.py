@@ -4,31 +4,9 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
-# from util.image_pool import ImagePool
-from collections import OrderedDict
-import time
-# from options.train_options import TrainOptions
-from collections import defaultdict
-import h5py
-import scipy.io
-from torch.autograd import Variable
-import torch.optim as optim
 import numpy as np
-
-
-import torchvision
 import os
-from easydict import EasyDict as edict
-import random
-import matplotlib.pyplot as plt
-import sys
-import ntpath
-import time
-# from scipy.misc import imresize
-import json
-
 from Generators import *
-# from LocationNetworks import *
 
 def write_log(log_values, model_name, log_dir="", log_type='loss', type_write='a'):
     if not os.path.exists(log_dir):
@@ -173,8 +151,8 @@ def init_net(net, init_type='normal', init_gain=1, gpu_ids=[]):
 
 def localization_error(output_predictions,input_labels,scale=0.1):
     """
-    output_predictions: (N,1,H,W), model prediciton 
-    input_labels: (N,1,H,W), ground turth target
+    output_predictions: (N,1,H,W), model prediction 
+    input_labels: (N,1,H,W), ground truth target
     """
     image_size = output_predictions.shape
     error = np.zeros(image_size[0])

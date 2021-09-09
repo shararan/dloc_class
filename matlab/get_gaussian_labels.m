@@ -1,6 +1,13 @@
 function labels_gaussian = get_gaussian_labels(labels, sigma, x_vals, y_vals)
+    % Generate ground truth label for training. Produce prob value for each
+    % grid points using a 2d gaussian distribution. 
     % labels: Nx2, xy ground truth location
-    %x_vals and y_vals are 1 X N arrays of potential grid valuess
+    % Args:
+    % x_vals: 1 X N_x arrays of x grid values
+    % y_vals: 1 X N_y arrays of y grid values
+    % Return:
+    % labels_gaussian: N_points x N_y x N_x, XY images output of 2d gaussian pdf.
+    
     n_xlabels = length(x_vals);
     n_ylabels =length(y_vals);
     labels_gaussian = zeros(size(labels,1),n_ylabels,n_xlabels);

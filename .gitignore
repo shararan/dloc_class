@@ -2,6 +2,7 @@
 results/
 logs/
 runs/
+matlab/test_*
 
 # Compiled source #
 ###################

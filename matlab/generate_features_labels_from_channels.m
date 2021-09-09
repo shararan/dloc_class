@@ -10,6 +10,7 @@ TEST_SPLIT = 0.2;    % percentage for test set
 data_path = "/media/ehdd_8t1/chenfeng/phone_data/results-phone_4AP-comp=1.mat";
 x_max = 5;   % size of the field alone x direction
 y_max = 5;   % size of the field alone y direction
+test_bbox = {}; % bounding box that selects test data. {[x_min,x_max,y_min,y_max], ...}
 
 %% load data
 load(data_path, ...
@@ -73,12 +74,11 @@ min_y = -d2(end)/2;
 d1 = min_x:GRID_SIZE:max_x;
 d2 = min_y:GRID_SIZE:max_y;
 
+%% Get features
 features_w_offset = zeros(n_points,n_ap,length(d2),length(d1));
 features_wo_offset = zeros(n_points,n_ap,length(d2),length(d1));
-
-%% Get features
 for i=1:n_points
-    features_with_offset(i,:,:,:) = generate_features_abs(squeeze(channels(i,:,:,:)),...
+    features_w_offset(i,:,:,:) = generate_features_abs(squeeze(channels(i,:,:,:)),...
         ap,...
         theta_vals,...
         d_vals,...
@@ -86,7 +86,7 @@ for i=1:n_points
         d2,...
         opt);
     
-    features_without_offset(i,:,:,:) = generate_features_abs(squeeze(channels_wo_offset(i,:,:,:)),...
+    features_wo_offset(i,:,:,:) = generate_features_abs(squeeze(channels_wo_offset(i,:,:,:)),...
         ap,...
         theta_vals,...
         d_vals,...
@@ -106,18 +106,15 @@ labels_gaussian_2d = get_gaussian_labels(labels,...
     d2);
 
 %% train / test split
-random_idxs = randperm(size(channels,1));
-train_len = round(size(channels,1)*TRAIN_SPLIT);
-train_idxs = random_idxs(1:train_len);
-test_idxs = random_idxs(train_len+1:end);
+[train_idxs, test_idxs] = split_train_test(labels, test_bbox);
 
-% features_with_offset
-features_with_offset_train = features_with_offset(train_idxs,:,:,:);
-features_with_offset_test = features_with_offset(test_idxs,:,:,:);
+% features_w_offset
+features_w_offset_train = features_w_offset(train_idxs,:,:,:);
+features_w_offset_test = features_w_offset(test_idxs,:,:,:);
 
-% features_without_offset
-features_without_offset_train = features_without_offset(train_idxs,:,:,:);
-features_without_offset_test = features_without_offset(test_idxs,:,:,:);
+% features_wo_offset
+features_wo_offset_train = features_wo_offset(train_idxs,:,:,:);
+features_wo_offset_test = features_wo_offset(test_idxs,:,:,:);
 
 % labels_gaussian_2d
 labels_gaussian_2d_train = labels_gaussian_2d(train_idxs,:,:);
@@ -131,11 +128,11 @@ labels_test = labels(test_idxs,:);
 [save_dir,~,~] = fileparts(data_path);
 
 % rename train data
-clear features_with_offset features_without_offset labels_gaussian_2d labels
-features_w_offset = features_with_offset_train;
-features_wo_offset = features_without_offset_train;
+features_w_offset = features_w_offset_train;
+features_wo_offset = features_wo_offset_train;
 labels_gaussian_2d = labels_gaussian_2d_train;
 labels = labels_train;
+index = train_idxs;
 
 % save train data
 dataset_train_name = sprintf('dataset_%s_train.mat',dataset_name);
@@ -144,14 +141,15 @@ save(fullfile(save_dir, dataset_train_name), ...
     'features_wo_offset',...
     'labels_gaussian_2d',...
     'labels',...
+    'index',...
     '-v7.3');
 
 % rename test data
-clear features_w_offset features_wo_offset labels_gaussian_2d labels
-features_w_offset = features_with_offset_test;
-features_wo_offset = features_without_offset_test;
+features_w_offset = features_w_offset_test;
+features_wo_offset = features_wo_offset_test;
 labels_gaussian_2d = labels_gaussian_2d_test;
 labels = labels_test;
+index = test_idxs;
 
 % save test data
 dataset_test_name = sprintf('dataset_%s_test.mat',dataset_name);
@@ -160,4 +158,5 @@ save(fullfile(save_dir, dataset_test_name), ...
     'features_wo_offset',...
     'labels_gaussian_2d',...
     'labels',...
+    'index',...
     '-v7.3');

@@ -2,14 +2,10 @@
 % Tuneable Parameters
 GRID_SIZE = 0.1;     % the output grid size of each pixel
 OUTPUT_SIGMA = 0.25; % the gaussian variance of the output gaussian target
-TRAIN_SPLIT = 0.8;   % percentage for train set
-TEST_SPLIT = 0.2;    % percentage for test set
 
 %% dataset setting
 % change this for each dataset
 data_path = "/media/ehdd_8t1/chenfeng/phone_data/results-phone_4AP-comp=1.mat";
-x_max = 5;   % size of the field alone x direction
-y_max = 5;   % size of the field alone y direction
 test_bbox = {}; % bounding box that selects test data. {[x_min,x_max,y_min,y_max], ...}
 
 %% load data
@@ -35,6 +31,8 @@ labels = repmat(robot_xy, [2 1]);
 real_tof = repmat(real_tof, [2 1]);
 
 %% create variables 
+x_max = max(labels(:,1)) - min(labels(:,1));   % size of the field alone x direction
+y_max = max(labels(:,2)) - min(labels(:,2));   % size of the field alone y direction
 x_values = 0:GRID_SIZE:x_max; % x axis grid points
 y_values = 0:GRID_SIZE:y_max; % y axis grid points
 [n_points,n_sub,n_ant,n_ap] = size(channels);

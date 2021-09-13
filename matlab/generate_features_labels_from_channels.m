@@ -6,7 +6,6 @@ OUTPUT_SIGMA = 0.25; % the gaussian variance of the output gaussian target
 %% dataset setting
 % change this for each dataset
 data_path = "/media/ehdd_8t1/chenfeng/phone_data/results-phone_4AP-comp=1.mat";
-test_bbox = {}; % bounding box that selects test data. {[x_min,x_max,y_min,y_max], ...}
 
 %% load data
 load(data_path, ...
@@ -103,57 +102,9 @@ labels_gaussian_2d = get_gaussian_labels(labels,...
     x_values,...
     y_values);
 
-%% train / test split
-[train_idxs, test_idxs] = split_train_test(labels, test_bbox);
-
-% features_w_offset
-features_w_offset_train = features_w_offset(train_idxs,:,:,:);
-features_w_offset_test = features_w_offset(test_idxs,:,:,:);
-
-% features_wo_offset
-features_wo_offset_train = features_wo_offset(train_idxs,:,:,:);
-features_wo_offset_test = features_wo_offset(test_idxs,:,:,:);
-
-% labels_gaussian_2d
-labels_gaussian_2d_train = labels_gaussian_2d(train_idxs,:,:);
-labels_gaussian_2d_test = labels_gaussian_2d(test_idxs,:,:);
-
-% labels
-labels_train = labels(train_idxs,:);
-labels_test = labels(test_idxs,:);
-
-%% save all data
-[save_dir,~,~] = fileparts(data_path);
-
-% rename train data
-features_w_offset = features_w_offset_train;
-features_wo_offset = features_wo_offset_train;
-labels_gaussian_2d = labels_gaussian_2d_train;
-labels = labels_train;
-index = train_idxs;
-
-% save train data
-dataset_train_name = sprintf('dataset_%s_train.mat',dataset_name);
+% save all data
+dataset_train_name = sprintf('dataset_%s_all.mat',dataset_name);
 save(fullfile(save_dir, dataset_train_name), ...
-    'features_w_offset',...
-    'features_wo_offset',...
-    'labels_gaussian_2d',...
-    'labels',...
-    'index',...
-    'x_values',...
-    'y_values',...
-    '-v7.3');
-
-% rename test data
-features_w_offset = features_w_offset_test;
-features_wo_offset = features_wo_offset_test;
-labels_gaussian_2d = labels_gaussian_2d_test;
-labels = labels_test;
-index = test_idxs;
-
-% save test data
-dataset_test_name = sprintf('dataset_%s_test.mat',dataset_name);
-save(fullfile(save_dir, dataset_test_name), ...
     'features_w_offset',...
     'features_wo_offset',...
     'labels_gaussian_2d',...

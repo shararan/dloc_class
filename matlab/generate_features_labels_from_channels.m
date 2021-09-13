@@ -11,28 +11,32 @@ data_path = "/media/ehdd_8t1/chenfeng/phone_data/results-phone_4AP-comp=1.mat";
 x_max = 5;   % size of the field alone x direction
 y_max = 5;   % size of the field alone y direction
 
-
 %% load data
 load(data_path, ...
-    'channels3_4D', ...   % size = [n_point,n_sub,n_ant,n_ap], raw csi data
+    'channels3_4D', ...   % size = [n_point, n_sub, n_rx_ant, n_ap*n_tx], raw csi data
     'robot_xy', ...       % size = [n_points, 2], xy ground truth labels
     'real_tof', ...       % size = [n_points, n_ap], real time of flight in m
+    'd_pred',...          % size = [n_points, n_ap*n_tx], tof prediction in meter
     'theta_vals',...      % aoa search space in radians
     'd_vals',...          % tof search space in m
     'opt',...             % struct, contain constants like freq, bandwidth, etc
-    'ap',...              % cell, xy coordinates of antennas on all access point
-    'dataset_name',...    % str, name of dataset
-    'd_pred');            % tof prediction in meter
+    'ap',...              % cell, [1,n_ap] xy coordinates of antennas on all access point
+    'dataset_name');      % str, name of dataset           
 
-%% reformat data
-channels1 = channels3_4D(:,:,:,[1,3,5,7]);
-channels2 = channels3_4D(:,:,:,[2,4,6,8]);
-d_pred1 = d_pred(:,[1,3,5,7]);
-d_pred2 = d_pred(:,[2,4,6,8]);
-channels = cat(1, channels1, channels2);
-d_pred = cat(1, d_pred1, d_pred2);
-labels = repmat(robot_xy, [2 1]);
-real_tof = repmat(real_tof, [2 1]);
+%% reformat data, stack different tx data on the first dim
+n_tx = size(channels3_4D,4) / length(ap); % number of transmitter antenna
+channels = cell(1, length(ap));
+d_pred_cell = cell(1, length(ap));
+index = reshape(1:size(channels3_4D,4), n_tx, []);
+for i=1:n_tx
+    ant_range = index(i,:);
+    channels{i} = channels3_4D(:,:,:,ant_range);
+    d_pred_cell{i} = d_pred(:,ant_range);
+end
+channels = cat(1,channels{:});          % [n_point*n_tx, n_sub, n_rx, n_ap]
+d_pred = cat(1, d_pred_cell{:});        % [n_point*n_tx, n_ap]
+labels = repmat(robot_xy, [n_tx 1]);    % [n_point*n_tx, 2->(x,y)]
+real_tof = repmat(real_tof, [n_tx 1]);  % [n_point*n_tx, n_ap]
 
 %% create variables 
 x_values = 0:GRID_SIZE:x_max; % x axis grid points

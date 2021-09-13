@@ -1,10 +1,15 @@
 %% 
-data_path = ''
+data_path = '';
 test_bbox = {}; % bounding box that selects test data. {[x_min,x_max,y_min,y_max], ...}
 
 %% train / test split
-dataset = load(data_path)
+dataset = load(data_path);
 [train_idxs, test_idxs] = split_train_test(dataset.labels, test_bbox);
+m = input('Do you want to continue? y/n:','s');
+if m=='n' || m=='N'
+    disp('Process terminated')
+    exit
+end
 
 % features_w_offset
 features_w_offset_train = dataset.features_w_offset(train_idxs,:,:,:);
@@ -23,8 +28,8 @@ labels_train = dataset.labels(train_idxs,:);
 labels_test = dataset.labels(test_idxs,:);
 
 % x and y axis range
-x_values = dataset.x_values
-y_values = dataset.y_values
+x_values = dataset.x_values;
+y_values = dataset.y_values;
 
 %% save all data
 [save_dir,~,~] = fileparts(data_path);

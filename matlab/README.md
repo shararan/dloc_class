@@ -11,8 +11,6 @@ generate_features_labels_from_channels.m
 Make sure to change the following lines for each dataset:
 ```
 data_path = "path/to/csi_data.mat";
-x_max = integer;   % size of the experiment arena alone x direction
-y_max = integer;   % size of the experiment arena alone y direction
 ```
 
 **Note**: `csi_data.mat` must contain the following fields:

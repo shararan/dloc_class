@@ -27,4 +27,6 @@ function [train_idxs, test_idxs] = split_train_test(labels, bboxs)
     idx_all = 1:size(labels,1);
     test_idxs = idx_all(test_mask);
     train_idxs = idx_all(~test_mask);
+    
+    fprintf('Test sample: %f of total data.\n', length(test_idxs)/length(idx_all));
 end

@@ -1,73 +1,33 @@
 %% 
-data_path = '';
-test_bbox = {}; % bounding box that selects test data. {[x_min,x_max,y_min,y_max], ...}
+data_path = '/media/ehdd_8t1/chenfeng/DLoc_data/dloc_pc2_10-3-2020/dataset_dloc_pc2_10-3-2020_all_tx1.mat'; % mat file created by generate_features_labels_from_channels.m
+test_bbox = {[-16.5,-5,3,6.53],...
+             [-5,7.4,3,6.53],...
+             [-16.5,-5,-0.16,3],...
+             [-5,7.4,-0.16,3]}; % bounding box that selects test data. {[x_min,x_max,y_min,y_max], ...}
+[save_dir,name,ext] = fileparts(data_path);
 
-%% train / test split
+%% cross validation
 dataset = load(data_path);
-[train_idxs, test_idxs] = split_train_test(dataset.labels, test_bbox);
-m = input('Do you want to continue? y/n:','s');
-if m=='n' || m=='N'
-    disp('Process terminated')
-    exit
+for i = 1:length(test_bbox)
+    [train_idxs, test_idxs] = split_train_test(dataset.labels, test_bbox{i});
+    fprintf('fold %d: test = %f of total data\n',i, length(test_idxs)/size(dataset.labels,1))
 end
+% m = input('Do you want to continue? y/n:','s');
+% if m=='n' || m=='N'
+%     disp('Process terminated')
+%     exit
+% end
 
-% features_w_offset
-features_w_offset_train = dataset.features_w_offset(train_idxs,:,:,:);
-features_w_offset_test = dataset.features_w_offset(test_idxs,:,:,:);
+%% save train/test data for each fold
+for i = 1:length(test_bbox)
+    [train_idxs, test_idxs] = split_train_test(dataset.labels, test_bbox{i});
 
-% features_wo_offset
-features_wo_offset_train = dataset.features_wo_offset(train_idxs,:,:,:);
-features_wo_offset_test = dataset.features_wo_offset(test_idxs,:,:,:);
+    % save train
+    train_name = sprintf('%s_train_fold_%d.mat', dataset.dataset_name,i);
+    save_dataset(dataset, train_idxs, train_name, save_dir);
 
-% labels_gaussian_2d
-labels_gaussian_2d_train = dataset.labels_gaussian_2d(train_idxs,:,:);
-labels_gaussian_2d_test = dataset.labels_gaussian_2d(test_idxs,:,:);
-
-% labels
-labels_train = dataset.labels(train_idxs,:);
-labels_test = dataset.labels(test_idxs,:);
-
-% x and y axis range
-x_values = dataset.x_values;
-y_values = dataset.y_values;
-
-%% save all data
-[save_dir,~,~] = fileparts(data_path);
-
-% rename train data
-features_w_offset = features_w_offset_train;
-features_wo_offset = features_wo_offset_train;
-labels_gaussian_2d = labels_gaussian_2d_train;
-labels = labels_train;
-index = train_idxs;
-
-% save train data
-dataset_train_name = sprintf('dataset_%s_train.mat',dataset_name);
-save(fullfile(save_dir, dataset_train_name), ...
-    'features_w_offset',...
-    'features_wo_offset',...
-    'labels_gaussian_2d',...
-    'labels',...
-    'index',...
-    'x_values',...
-    'y_values',...
-    '-v7.3');
-
-% rename test data
-features_w_offset = features_w_offset_test;
-features_wo_offset = features_wo_offset_test;
-labels_gaussian_2d = labels_gaussian_2d_test;
-labels = labels_test;
-index = test_idxs;
-
-% save test data
-dataset_test_name = sprintf('dataset_%s_test.mat',dataset_name);
-save(fullfile(save_dir, dataset_test_name), ...
-    'features_w_offset',...
-    'features_wo_offset',...
-    'labels_gaussian_2d',...
-    'labels',...
-    'index',...
-    'x_values',...
-    'y_values',...
-    '-v7.3');
+    % save test
+    test_name = sprintf('%s_test_fold_%d.mat', dataset.dataset_name,i);
+    save_dataset(dataset, test_idxs, test_name, save_dir);
+    fprintf('fold %d train/test is saved.\n',i)
+end

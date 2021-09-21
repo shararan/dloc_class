@@ -12,9 +12,9 @@ from params import *
 import trainer
 
 # data path and best epoch
-testpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_test.mat']
-eval_name = "/media/ehdd_8t1/chenfeng/runs/2021-08-30-20:49:31" # experiment to evaluate
-epoch = "best"  # int/"best"/"last"
+testpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dloc_pc2_10-3-2020/tx1/dloc_pc2_10-3-2020_test_fold_1.mat']
+eval_name = "/media/ehdd_8t1/chenfeng/DLoc_code/runs/2021-09-20-22:54:16" # experiment to evaluate
+epoch = "best"  # int/"best"/"last
 
 # init encoder
 enc_model = ModelADT()
@@ -43,9 +43,13 @@ for i in range(len(testpath)-1):
     B_test = torch.cat((B_test, f), 0)
     A_test = torch.cat((A_test, f1), 0)
     labels_test = torch.cat((labels_test, l), 0)
+B_test = B_test[:,:,:133,:477]
+A_test = A_test[:,:,:133,:477]
 
 # create data loader 
 labels_test = torch.unsqueeze(labels_test, 1)
+labels_test = labels_test[:,:,:133,:477]
+
 test_data = torch.utils.data.TensorDataset(B_test, A_test, labels_test)
 test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=False)
 print('# testing mini batch = %d' % len(test_loader))

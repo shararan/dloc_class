@@ -31,6 +31,7 @@ def train(model, train_loader, test_loader):
             model.set_input(data[input_index], data[output_index], data[offset_output_index], shuffle_channel=False)
             model.optimize_parameters()
             dec_outputs = model.decoder.output
+            # print(f"dec_outputs size is : {dec_outputs.shape}")
             error.extend(localization_error(dec_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
 
             write_log([str(model.decoder.loss.item())], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='loss')
@@ -56,9 +57,9 @@ def train(model, train_loader, test_loader):
         write_log([str(error_99th_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_99th_error')
         write_log([str(nighty_percentile_error_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_90_error')
         if (epoch==1):
-            min_eval_loss, median_error = test(model, test_loader, input_index=input_index, output_index=output_index, offset_output_index=offset_output_index, save_output=True)
+            min_eval_loss, median_error = test(model, test_loader, save_output=False)
         else:
-            new_eval_loss, new_med_error = test(model, test_loader, input_index=input_index, output_index=output_index, offset_output_index=offset_output_index, save_output=True)
+            new_eval_loss, new_med_error = test(model, test_loader, save_output=False)
             if (median_error>=new_med_error):
                 stopping_count = stopping_count+1
                 median_error = new_med_error
@@ -136,7 +137,7 @@ def test(model, test_loader, save_output=True, save_name="decoder_test_result", 
 
     if save_output:
         if not save_dir:
-            save_dir = model.decoder.results_save_dir
+            save_dir = model.decoder.results_save_dir # default save directory
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir, exist_ok=True)

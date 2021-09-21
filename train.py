@@ -16,8 +16,8 @@ np.random.seed(0)
 # data path
 # trainpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_edit_jacobs_July28.mat']
 # testpath = ['/media/datadisk/Roshan/datasets/quantenna/features/dataset_fov_test_jacobs_July28_2.mat']
-trainpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_train.mat']
-testpath = ['/media/ehdd_8t1/chenfeng/phone_data/dataset_phone_4AP_test.mat']
+trainpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dloc_pc2_10-3-2020/tx1/dloc_pc2_10-3-2020_train_fold_2.mat']
+testpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dloc_pc2_10-3-2020/tx1/dloc_pc2_10-3-2020_test_fold_2.mat']
 
 # init encoder
 enc_model = ModelADT()
@@ -41,12 +41,18 @@ joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, frozen_d
 
 # load traning data
 B_train,A_train,labels_train = load_data(trainpath[0], 0, 0, 0, 1)
+B_train = B_train[:,:,:133,:477]
+A_train = A_train[:,:,:133,:477]
+
 for i in range(len(trainpath)-1):
     f,f1,l = load_data(trainpath[i+1], 0, 0, 0, 1)
     B_train = torch.cat((B_train, f), 0)
     A_train = torch.cat((A_train, f1), 0)
     labels_train = torch.cat((labels_train, l), 0)
+
 labels_train = torch.unsqueeze(labels_train, 1)
+labels_train = labels_train[:,:,:133,:477]
+
 train_data = torch.utils.data.TensorDataset(B_train, A_train, labels_train)
 train_loader =torch.utils.data.DataLoader(train_data, batch_size=opt_exp.batch_size, shuffle=True)
 
@@ -57,12 +63,17 @@ print('# training mini batch = %d' % len(train_loader))
 
 # load testing data
 B_test,A_test,labels_test = load_data(testpath[0], 0, 0, 0, 1)
+B_test = B_test[:,:,:133,:477]
+A_test = A_test[:,:,:133,:477]
+
 for i in range(len(testpath)-1):
     f,f1,l = load_data(testpath[i+1], 0, 0, 0, 1)
     B_test = torch.cat((B_test, f), 0)
     A_test = torch.cat((A_test, f1), 0)
     labels_test = torch.cat((labels_test, l), 0)
+
 labels_test = torch.unsqueeze(labels_test, 1)
+labels_test = labels_test[:,:,:133,:477]
 
 # create data loader
 test_data = torch.utils.data.TensorDataset(B_test, A_test, labels_test)

@@ -8,7 +8,7 @@ Then you can run the [train_and_test.py](../train_and_test.py) script to re-prod
 
 ### Description of the parameter files (Please refer to [DLoc paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894) to see the figure numbers and the appropriate results that you can reproduce)
 
-`
+```
 - **params_fig10a.py**: Generate the DLoc results to reproduce the plot in Figure 10a
 - **params_fig10b.py**: Generate the DLoc results to reproduce the plot in Figure 10b
 - **params_fig11a.py**: Generate the DLoc results to reproduce the plot in Figure 11a for without copensation decoder
@@ -19,5 +19,5 @@ Then you can run the [train_and_test.py](../train_and_test.py) script to re-prod
 - **params_tab1_test2.py**: Generate the DLoc results to reproduce the results in Table1, where the network is trained on Env-1/3/4 and Tested on Env-2
 - **params_tab1_test3.py**: Generate the DLoc results to reproduce the results in Table1, where the network is trained on Env-1/2/4 and Tested on Env-3
 - **params_tab1_test4.py**: Generate the DLoc results to reproduce the results in Table1, where the network is trained on Env-1/2/3 and Tested on Env-4
-`
+```
 

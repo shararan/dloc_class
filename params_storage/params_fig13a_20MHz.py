@@ -7,10 +7,6 @@ opt_exp = edict()
 opt_exp.isTrain = True
 opt_exp.continue_train = False #action='store_true', help='continue training: load the latest model')
 opt_exp.starting_epoch_count = 0 #type=int, default=1, help='the starting epoch count, we save the model by <starting_epoch_count>, <starting_epoch_count>+<save_latest_freq>, ...')
-opt_exp.isTrainGen = True
-opt_exp.isTrainLoc = True
-opt_exp.isFrozen = False
-opt_exp.isFrozen_gen = False
 opt_exp.n_epochs = 50
 opt_exp.gpu_ids = ['1','2','3','0']
 opt_exp.data = "rw_to_rw_20"

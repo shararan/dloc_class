@@ -178,13 +178,13 @@ if opt_exp.n_decoders == 2:
     # join all models
     print('Making the joint_model')
     joint_model = Enc_2Dec_Network()
-    joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, frozen_dec=opt_exp.isFrozen, gpu_ids=opt_exp.gpu_ids)
+    joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, gpu_ids=opt_exp.gpu_ids)
 
 elif opt_exp.n_decoders == 1:
     # join all models
     print('Making the joint_model')
     joint_model = Enc_Dec_Network()
-    joint_model.initialize(opt_exp, enc_model, dec_model, frozen_dec=opt_exp.isFrozen, gpu_ids=opt_exp.gpu_ids)
+    joint_model.initialize(opt_exp, enc_model, dec_model, gpu_ids=opt_exp.gpu_ids)
 
 else:
     print('Incorrect number of Decoders specified in the parameters')
@@ -212,9 +212,9 @@ enc_model.load_networks(epoch, load_dir=eval_name)
 dec_model.load_networks(epoch, load_dir=eval_name)
 if opt_exp.n_decoders == 2:
     offset_dec_model.load_networks(epoch, load_dir=eval_name)
-    joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, frozen_dec = opt_exp.isFrozen, gpu_ids = opt_exp.gpu_ids)
+    joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, gpu_ids = opt_exp.gpu_ids)
 elif opt_exp.n_decoders == 1:
-    joint_model.initialize(opt_exp, enc_model, dec_model, frozen_dec = opt_exp.isFrozen, gpu_ids = opt_exp.gpu_ids)
+    joint_model.initialize(opt_exp, enc_model, dec_model, gpu_ids = opt_exp.gpu_ids)
 
 # pass data through model
 total_loss, median_error = trainer.test(joint_model, 

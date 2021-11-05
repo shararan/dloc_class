@@ -3,6 +3,7 @@ import time
 from os.path import join
 opt_exp = edict()
 
+# ---------- Global Experiment param --------------
 opt_exp.isTrain = True
 opt_exp.continue_train = False #action='store_true', help='continue training: load the latest model')
 opt_exp.starting_epoch_count = 0 #type=int, default=1, help='the starting epoch count, we save the model by <starting_epoch_count>, <starting_epoch_count>+<save_latest_freq>, ...')
@@ -14,6 +15,12 @@ opt_exp.n_epochs = 50
 opt_exp.gpu_ids = ['1','2','3','0']
 opt_exp.data = "rw_to_rw"
 opt_exp.n_decoders = 1
+    
+opt_exp.batch_size = 32
+opt_exp.ds_step_trn = 1
+opt_exp.ds_step_tst = 1
+opt_exp.weight_decay = 1e-5
+opt_exp.confidence = False
 
 # ------ name of experiment ----------
 opt_exp.save_name = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()) # experiment name when train.py is ran
@@ -21,12 +28,6 @@ opt_exp.checkpoints_dir = join('./runs', opt_exp.save_name) #models are saved he
 opt_exp.results_dir = opt_exp.checkpoints_dir
 opt_exp.log_dir = opt_exp.checkpoints_dir
 opt_exp.load_dir = opt_exp.checkpoints_dir
-    
-opt_exp.batch_size = 32
-opt_exp.ds_step_trn = 1
-opt_exp.ds_step_tst = 1
-opt_exp.weight_decay = 1e-5
-opt_exp.confidence = False
 
 # ---------- offset decoder param --------------
 opt_encoder = edict()

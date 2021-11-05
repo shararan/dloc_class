@@ -1,4 +1,11 @@
 #!/usr/bin/python
+'''
+Script for both training and evaluating the DLoc network
+Automatically imports the parameters from params.py.
+For further details onto which params file to load
+read the README in `params_storage` folder.
+'''
+
 import torch
 import warnings
 with warnings.catch_warnings():
@@ -14,7 +21,10 @@ import trainer
 torch.manual_seed(0)
 np.random.seed(0)
 
-# Data paths. Assumes that the data is stored in a subfolder called data in the current data folder
+'''
+Defining the paths from where to Load Data.
+Assumes that the data is stored in a subfolder called data in the current data folder
+'''
 
 #####################################Final Simple Space Results################################################
 if "data" in opt_exp and opt_exp.data == "rw_to_rw_atk":
@@ -103,38 +113,9 @@ elif "data" in opt_exp and opt_exp.data == "data_segment":
     print('non-FOV to non-FOV experiments started')
 
 ######################################################################################################################
-
-# init encoder
-enc_model = ModelADT()
-enc_model.initialize(opt_encoder)
-enc_model.setup(opt_encoder)
-
-# init decoder1
-dec_model = ModelADT()
-dec_model.initialize(opt_decoder)
-dec_model.setup(opt_decoder)
-
-if opt_exp.n_decoders == 2:
-    # init decoder2
-    offset_dec_model = ModelADT()
-    offset_dec_model.initialize(opt_offset_decoder)
-    offset_dec_model.setup(opt_offset_decoder)
-
-    # join all models
-    print('Making the joint_model')
-    joint_model = Enc_2Dec_Network()
-    joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, frozen_dec=opt_exp.isFrozen, gpu_ids=opt_exp.gpu_ids)
-
-elif opt_exp.n_decoders == 1:
-    # join all models
-    print('Making the joint_model')
-    joint_model = Enc_Dec_Network()
-    joint_model.initialize(opt_exp, enc_model, dec_model, frozen_dec=opt_exp.isFrozen, gpu_ids=opt_exp.gpu_ids)
-
-else:
-    print('Incorrect number of Decoders specified in the parameters')
-    return -1
-
+'''
+Loading Training and Evaluation Data into their respective Dataloaders
+'''
 # load traning data
 B_train,A_train,labels_train = load_data(trainpath[0], 0, 0, 0, 1)
 
@@ -174,6 +155,41 @@ print(f"labels_test.shape: {labels_test.shape}")
 print('# testing mini batch = %d' % len(test_loader))
 print('Test Data Loaded')
 
+'''
+Initiate the Network and build the graph
+'''
+
+# init encoder
+enc_model = ModelADT()
+enc_model.initialize(opt_encoder)
+enc_model.setup(opt_encoder)
+
+# init decoder1
+dec_model = ModelADT()
+dec_model.initialize(opt_decoder)
+dec_model.setup(opt_decoder)
+
+if opt_exp.n_decoders == 2:
+    # init decoder2
+    offset_dec_model = ModelADT()
+    offset_dec_model.initialize(opt_offset_decoder)
+    offset_dec_model.setup(opt_offset_decoder)
+
+    # join all models
+    print('Making the joint_model')
+    joint_model = Enc_2Dec_Network()
+    joint_model.initialize(opt_exp, enc_model, dec_model, offset_dec_model, frozen_dec=opt_exp.isFrozen, gpu_ids=opt_exp.gpu_ids)
+
+elif opt_exp.n_decoders == 1:
+    # join all models
+    print('Making the joint_model')
+    joint_model = Enc_Dec_Network()
+    joint_model.initialize(opt_exp, enc_model, dec_model, frozen_dec=opt_exp.isFrozen, gpu_ids=opt_exp.gpu_ids)
+
+else:
+    print('Incorrect number of Decoders specified in the parameters')
+    return -1
+
 if opt_exp.isFrozen:
     enc_model.load_networks(opt_encoder.starting_epoch_count)
     dec_model.load_networks(opt_decoder.starting_epoch_count)
@@ -181,9 +197,15 @@ if opt_exp.isFrozen:
         offset_dec_model.load_networks(opt_offset_decoder.starting_epoch_count)
 
 # train the model
+'''
+Trainig the network
+'''
 trainer.train(joint_model, train_loader, test_loader)
 
-##############################################Model Evaluation##################################################
+'''
+Model Evaluation at the best epoch
+'''
+
 epoch = "best"  # int/"best"/"last"
 # load network
 enc_model.load_networks(epoch, load_dir=eval_name)

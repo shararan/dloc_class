@@ -17,11 +17,6 @@ def write_log(log_values, model_name, log_dir="", log_type='loss', type_write='a
 def get_model_funct(model_name):
     if model_name == "G":
         return define_G
-    # else:
-    #     return define_L
-
-# def define_L(opt, gpu_ids):
-#     return LocationNetwork()
 
 def define_G(opt, gpu_ids):
     net = None
@@ -52,12 +47,6 @@ def define_G(opt, gpu_ids):
     elif net_type == 'resnet_decoder':
         n_blocks    = opt.resnet_blocks
         net = ResnetDecoder(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks, encoder_blocks=opt.encoder_res_blocks)
-    elif net_type == 'resnet_encoder_cat':
-        n_blocks    = opt.resnet_blocks
-        net = ResnetEncoderCat(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks)
-    elif net_type == 'resnet_decoder_cat':
-        n_blocks    = opt.resnet_blocks
-        net = ResnetDecoderCat(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks, encoder_blocks=opt.encoder_res_blocks)        
     elif net_type == 'unet_128':
         net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif net_type == 'unet_256':
@@ -65,8 +54,6 @@ def define_G(opt, gpu_ids):
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % net_type)
     return init_net(net, init_type, init_gain, gpu_ids)
-
-# In[6]:
 
 
 def get_scheduler(optimizer, opt):
@@ -93,9 +80,6 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-# In[7]:
-
-
 def get_norm_layer(norm_type='instance'):
     if norm_type == 'batch':
         norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
@@ -106,9 +90,6 @@ def get_norm_layer(norm_type='instance'):
     else:
         raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
     return norm_layer
-
-
-# In[8]:
 
 
 def init_weights(net, init_type='normal', gain=1):
@@ -133,9 +114,6 @@ def init_weights(net, init_type='normal', gain=1):
 
     print('initialize network with %s' % init_type)
     net.apply(init_func)
-
-
-# In[9]:
 
 
 def init_net(net, init_type='normal', init_gain=1, gpu_ids=[]):

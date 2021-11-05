@@ -1,4 +1,4 @@
-The *.py* files in this folder are the parameter files that can be used to load the pre-tuned parameters to re-produce the results shown in [our paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894).
+The *.py* files in this folder are the parameter files that can be used to load the pre-tuned parameters to re-produce the results shown in the [paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894).
 
 Copy the appropriate parameter file into the [params.py](../params.py) file from the folder in which [train_and_test.py](../train_and_test.py)
 

@@ -1,4 +1,4 @@
-%% This script convert csi channels to features and labels for Dloc training
+%% This script convert csi channels to features and labels for DLoc training
 % Tuneable Parameters
 GRID_SIZE = 0.1;     % the output grid size of each pixel
 OUTPUT_SIGMA = 0.25; % the gaussian variance of the output gaussian target

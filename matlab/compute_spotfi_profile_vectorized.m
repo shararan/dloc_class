@@ -15,7 +15,6 @@ function P = compute_spotfi_profile_vectorized(h, theta_vals, d_vals, threshold,
     % Find eigen values
     % Detect Noise Subspace
     % Compute projects on the noise subspace
-    % disp('Entered vectorized spotfi');
     
     h=h.';
     

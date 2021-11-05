@@ -10,6 +10,13 @@ from Generators import *
 from params import *
 
 def train(model, train_loader, test_loader):
+    """Traning pipeline
+
+    Args:
+        model (torch.module): pytorch model
+        train_loader (torch.dataloader): dataloader
+        test_loader (torch.dataloader): dataloader
+    """
     # set data index
     offset_output_index=0
     input_index=1
@@ -28,30 +35,37 @@ def train(model, train_loader, test_loader):
 
         for i, data in enumerate(train_loader):
             total_steps += model.opt.batch_size
-            model.set_input(data[input_index], data[output_index], data[offset_output_index], shuffle_channel=False)
+            if opt_exp.n_decoders == 2:
+                model.set_input(data[input_index], data[output_index], data[offset_output_index], shuffle_channel=False)
+            elif opt_exp.n_decoders == 1:
+                model.set_input(data[input_index], data[output_index], shuffle_channel=False)
             model.optimize_parameters()
             dec_outputs = model.decoder.output
             # print(f"dec_outputs size is : {dec_outputs.shape}")
             error.extend(localization_error(dec_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
 
             write_log([str(model.decoder.loss.item())], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='loss')
-            write_log([str(model.offset_decoder.loss.item())], model.offset_decoder.model_name, log_dir=model.offset_decoder.opt.log_dir, log_type='offset_loss')
+            if opt_exp.n_decoders == 2:
+                write_log([str(model.offset_decoder.loss.item())], model.offset_decoder.model_name, log_dir=model.offset_decoder.opt.log_dir, log_type='offset_loss')
             if total_steps % model.decoder.opt.save_latest_freq == 0:
                 print('saving the latest model (epoch %d, total_steps %d)' %
                       (epoch, total_steps))
                 model.save_networks('latest')
 
             epoch_loss += model.decoder.loss.item()
-            epoch_offset_loss += model.offset_decoder.loss.item()
+            if opt_exp.n_decoders == 2:
+                epoch_offset_loss += model.offset_decoder.loss.item()
 
         median_error_tr = np.median(error)
         error_90th_tr = np.percentile(error,90)
         error_99th_tr = np.percentile(error,99)
         nighty_percentile_error_tr = np.percentile(error,90)
         epoch_loss /= i
-        epoch_offset_loss /= i
+        if opt_exp.n_decoders == 2:
+            epoch_offset_loss /= i
         write_log([str(epoch_loss)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='epoch_decoder_loss')
-        write_log([str(epoch_offset_loss)], model.offset_decoder.model_name, log_dir=model.offset_decoder.opt.log_dir, log_type='epoch_offset_decoder_loss')
+        if opt_exp.n_decoders == 2:
+            write_log([str(epoch_offset_loss)], model.offset_decoder.model_name, log_dir=model.offset_decoder.opt.log_dir, log_type='epoch_offset_decoder_loss')
         write_log([str(median_error_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_median_error')
         write_log([str(error_90th_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_90th_error')
         write_log([str(error_99th_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_99th_error')
@@ -78,7 +92,8 @@ def train(model, train_loader, test_loader):
               (epoch, model.decoder.opt.niter + model.decoder.opt.niter_decay, time.time() - epoch_start_time))
         model.decoder.update_learning_rate()
         model.encoder.update_learning_rate()
-        model.offset_decoder.update_learning_rate()
+        if opt_exp.n_decoders == 2:
+            model.offset_decoder.update_learning_rate()
 
 
 def test(model, test_loader, save_output=True, save_name="decoder_test_result", save_dir="", log=True):
@@ -110,20 +125,27 @@ def test(model, test_loader, save_output=True, save_name="decoder_test_result", 
     total_offset_loss = 0
     error =[]
     for i, data in enumerate(test_loader):
-            model.set_input(data[input_index], data[output_index], data[offset_output_index],convert_enc=True, shuffle_channel=False)
-            model.test()
+        if opt_exp.n_decoders == 2:
+                model.set_input(data[input_index], data[output_index], data[offset_output_index], shuffle_channel=False)
+            elif opt_exp.n_decoders == 1:
+                model.set_input(data[input_index], data[output_index], shuffle_channel=False)
+        model.test()
 
-            # get model outputs
-            gen_outputs = model.decoder.output  # gen_outputs.size = (N,1,H,W)
+        # get model outputs
+        gen_outputs = model.decoder.output  # gen_outputs.size = (N,1,H,W)
+        if opt_exp.n_decoders == 2:
             off_outputs = model.offset_decoder.output # off_outputs.size = (N,n_ap,H,W)
 
-            generated_outputs.extend(gen_outputs.data.cpu().numpy())
+        generated_outputs.extend(gen_outputs.data.cpu().numpy())
+        if opt_exp.n_decoders == 2:
             offset_outputs.extend(off_outputs.data.cpu().numpy())
-            error.extend(localization_error(gen_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
-            total_loss += model.decoder.loss.item()
+        error.extend(localization_error(gen_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
+        total_loss += model.decoder.loss.item()
+        if opt_exp.n_decoders == 2:
             total_offset_loss += model.offset_decoder.loss.item()
     total_loss /= i
-    total_offset_loss /= i
+    if opt_exp.n_decoders == 2:
+        total_offset_loss /= i
     median_error = np.median(error)
     nighty_percentile_error = np.percentile(error,90)
     error_99th = np.percentile(error,99)
@@ -133,7 +155,8 @@ def test(model, test_loader, save_output=True, save_name="decoder_test_result", 
         write_log([str(nighty_percentile_error)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_90_error')
         write_log([str(error_99th)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_99_error')
         write_log([str(total_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_loss')
-        write_log([str(total_offset_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_offset_loss')
+        if opt_exp.n_decoders == 2:
+            write_log([str(total_offset_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_offset_loss')
 
     if save_output:
         if not save_dir:

@@ -12,7 +12,9 @@ opt_exp.isFrozen = False
 opt_exp.isFrozen_gen = False
 opt_exp.n_epochs = 50
 opt_exp.gpu_ids = ['1','2','3','0']
+opt_exp.data = "rw_to_rw_env4"
 opt_exp.n_decoders = 2
+
 # ------ name of experiment ----------
 opt_exp.save_name = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()) # experiment name when train.py is ran
 opt_exp.checkpoints_dir = join('./runs', opt_exp.save_name) #models are saved here
@@ -20,10 +22,10 @@ opt_exp.results_dir = opt_exp.checkpoints_dir
 opt_exp.log_dir = opt_exp.checkpoints_dir
 opt_exp.load_dir = opt_exp.checkpoints_dir
     
-opt_exp.batch_size = 16
+opt_exp.batch_size = 32
 opt_exp.ds_step_trn = 1
 opt_exp.ds_step_tst = 1
-opt_exp.weight_decay = 5e-4
+opt_exp.weight_decay = 1e-5
 opt_exp.confidence = False
 
 # ---------- offset decoder param --------------
@@ -39,12 +41,12 @@ opt_encoder.init_type = 'xavier' #type=str, default='normal', help='network init
 opt_encoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_encoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_encoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_encoder.lr = 0.000001 #type=float, default=0.0002, help='initial learning rate for adam')
+opt_encoder.lr = 0.00001 #type=float, default=0.0002, help='initial learning rate for adam')
 opt_encoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
-opt_encoder.lr_decay_iters = 20 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
+opt_encoder.lr_decay_iters = 50 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_encoder.lambda_L = 1 # weightage given to the Generator
-opt_encoder.lambda_cross = 1e-6
-opt_encoder.lambda_reg = 1e-6
+opt_encoder.lambda_cross = 1e-5
+opt_encoder.lambda_reg = 5e-4
 opt_encoder.weight_decay = opt_encoder.parent_exp.weight_decay
 
 
@@ -93,13 +95,13 @@ opt_decoder.lr = opt_encoder.lr  #type=float, default=0.0002, help='initial lear
 opt_decoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_decoder.lr_decay_iters = 20 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_decoder.lambda_L = 1 # weightage given to the Generator
-opt_decoder.lambda_cross = 1e-6
-opt_decoder.lambda_reg = 1e-6
+opt_decoder.lambda_cross = 1e-5
+opt_decoder.lambda_reg = 5e-4
 opt_decoder.weight_decay = opt_decoder.parent_exp.weight_decay
 
 
 #opt_decoder.input_nc = 4 #type=int, default=3, help='# of input image channels')
-opt_decoder.input_nc = 5 #type=int, default=3, help='# of input image channels')
+opt_decoder.input_nc = 4 #type=int, default=3, help='# of input image channels')
 opt_decoder.output_nc = 1 #type=int, default=3, help='# of output image channels')
 opt_decoder.save_latest_freq = 5000 #type=int, default=5000, help='frequency of saving the latest results')
 opt_decoder.save_epoch_freq = 1 #type=int, default=5, help='frequency of saving checkpoints at the end of epochs')
@@ -141,15 +143,15 @@ opt_offset_decoder.norm = 'instance' #type=str, default='instance', help='instan
 opt_offset_decoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
 opt_offset_decoder.lr = opt_encoder.lr #type=float, default=0.0002, help='initial learning rate for adam')
 opt_offset_decoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
-opt_offset_decoder.lr_decay_iters = 20 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
+opt_offset_decoder.lr_decay_iters = 50 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_offset_decoder.lambda_L = 1 # weightage given to the Generator
-opt_offset_decoder.lambda_cross = 1e-6
-opt_offset_decoder.lambda_reg = 1e-6
+opt_offset_decoder.lambda_cross = 0
+opt_offset_decoder.lambda_reg = 0
 opt_offset_decoder.weight_decay = opt_offset_decoder.parent_exp.weight_decay
 
 
 #opt_offset_decoder.input_nc = 4 #type=int, default=3, help='# of input image channels')
-opt_offset_decoder.input_nc = 5 #type=int, default=3, help='# of input image channels')
+opt_offset_decoder.input_nc = 4 #type=int, default=3, help='# of input image channels')
 opt_offset_decoder.output_nc = 4 #type=int, default=3, help='# of output image channels')
 opt_offset_decoder.save_latest_freq = 5000 #type=int, default=5000, help='frequency of saving the latest results')
 opt_offset_decoder.save_epoch_freq = 1 #type=int, default=5, help='frequency of saving checkpoints at the end of epochs')

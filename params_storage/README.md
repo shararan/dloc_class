@@ -2,7 +2,9 @@ The *.py* files in this folder are the parameter files that can be used to load 
 
 Copy the appropriate parameter file into the [params.py](../params.py) file from the folder in which [train_and_test.py](../train_and_test.py)
 
-`cp <./params_storage/params_file.py> params.py`
+```params
+cp <./params_storage/params_file.py> params.py
+```
 
 Then you can run the [train_and_test.py](../train_and_test.py) script to re-produce the results from the paper.
 

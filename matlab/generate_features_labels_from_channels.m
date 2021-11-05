@@ -5,8 +5,8 @@ OUTPUT_SIGMA = 0.25; % the gaussian variance of the output gaussian target
 
 %% dataset setting
 % change this for each dataset
-data_path = "/media/ehdd_8t1/chenfeng/csi_data/dloc_pc2_10-3-2020/analysis/results-dloc_pc2_10-3-2020-comp=1.mat";
-save_dir = "/media/ehdd_8t1/chenfeng/DLoc_data";
+data_path = "./data/csi/dloc_csi_dataset.mat";
+save_dir = "./data/";
 
 %% load data
 load(data_path, ...

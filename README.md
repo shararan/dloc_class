@@ -1,6 +1,6 @@
-# DLoc for phone
+# DLoc code
 
-This repository is the official implementation of [My Paper Title](https://arxiv.org/abs/2030.12345). 
+This repository is the official implementation of DLoc from [Deep Learning based Wireless Localization for Indoor Navigation](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894). 
 
 ## Requirements
 
@@ -10,22 +10,20 @@ To install requirements:
 pip install -r requirements.txt
 ```
 
-## Training
+## Training and Evlautaion
 
-To train the model(s) in the paper, run this command:
+To train the model(s) in the paper and evaluate them, run this command:
 
 ```train
-python train.py
+python train_and_test.py
 ```
 
+The file automatically imports the parameters from [params.py](params.py).
+The parameters and their descriptions can be found in the example implementaion of the params.py file.
 
-## Evaluation
+To recreate the results from the [paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894) refer to the [README](./params_storage/README.md) of the *params_storage* folder.
 
-To evaluate my model on ImageNet, run:
-
-```eval
-python eval.py
-```
+The datasets required to run these codes can be downloaded from the [WILD](https://wcsng.ucsd.edu/wild/) website.
 
 
 <!-- ## Pre-trained Models

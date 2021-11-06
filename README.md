@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 To train the model(s) in the paper and evaluate them, run this command:
 
-```train
+```train_test
 python train_and_test.py
 ```
 
@@ -30,4 +30,4 @@ The file automatically imports the parameters from [params.py](params.py).
 
 The parameters and their descriptions can be found in the comments of the example implementaion of the [params.py](params.py) file.
 
-To recreate the results from the [paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894) refer to the [README](./params_storage/README.md) of the *params_storage* folder.
+To recreate the results from the [paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894) refer to the [README](./params_storage/README.md) of the **params_storage** folder.

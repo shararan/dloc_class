@@ -9,7 +9,7 @@ These codes contain the pre-processing codes to convert the raw Channel-State-In
 
 For further details please refer to the [README](./MATLAB/README.md) file in the MATLAB folder.
 
-## PyTorch Implementation Codes
+## PyTorch Codes
 
 To install requirements:
 

@@ -9,6 +9,15 @@ These codes contain the pre-processing codes to convert the raw Channel-State-In
 
 For further details please refer to the [README](./MATLAB/README.md) file in the MATLAB folder.
 
+## PyTorch Requirements
+
+To install requirements:
+
+```setup
+pip install -r requirements.txt
+```
+
+
 ## Training and Evlautaion
 
 To train the model(s) in the paper and evaluate them, run this command:
@@ -22,17 +31,6 @@ The file automatically imports the parameters from [params.py](params.py).
 The parameters and their descriptions can be found in the comments of the example implementaion of the [params.py](params.py) file.
 
 To recreate the results from the [paper](https://dl.acm.org/doi/pdf/10.1145/3372224.3380894) refer to the [README](./params_storage/README.md) of the *params_storage* folder.
-
-
-# Coming Soon
-
-## Requirements
-
-To install requirements:
-
-```setup
-pip install -r requirements.txt
-```
 
 
 <!-- ## Pre-trained Models

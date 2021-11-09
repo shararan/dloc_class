@@ -1,5 +1,20 @@
 # custom gitignore
 *.DS_Store
+#Don't track content of these folders
+results/
+logs/
+runs/
+matlab/test_*
+
+# Compiled source #
+###################
+*.pt
+*.pth
+*.txt
+*.mat
+*.m~
+*.DS_Store
+*.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,31 +1,14 @@
 #!/usr/bin/python
-
+'''
+Defines a generic wrapper class for all the network models
+Utilizes params.py to create, initiate, load and train the network.
+'''
 import torch
-import torch.nn as nn
-from torch.nn import init
-import functools
-from torch.optim import lr_scheduler
-# from util.image_pool import ImagePool
 from collections import OrderedDict
-import time
-# from options.train_options import TrainOptions
-from collections import defaultdict
-import h5py
 import scipy.io
 from torch.autograd import Variable
-import torch.optim as optim
-import numpy as np
-import torchvision
 import os
-from easydict import EasyDict as edict
-import random
-import matplotlib.pyplot as plt
-import sys
-import ntpath
-import time
-from scipy.misc import imresize
-import json
-
+from Generators import *
 from utils import *
 
 class ModelADT():
@@ -35,7 +18,12 @@ class ModelADT():
     def initialize(self, opt):
         
         self.opt = opt
-        self.gpu_ids = opt.gpu_ids
+#        self.gpu_ids = opt.gpu_ids
+        gpu_ids = []
+        for i in range(torch.cuda.device_count()):
+            gpu_ids.append(str(i))
+        print(gpu_ids)
+        self.gpu_ids = gpu_ids
         self.isTrain = opt.isTrain
         self.loss_weight = opt.lambda_L
         self.reg_loss_weight = opt.lambda_reg
@@ -46,7 +34,7 @@ class ModelADT():
         self.model_name = self.opt.name
         self.save_dir = os.path.join(self.opt.checkpoints_save_dir, self.model_name)
         self.load_dir = os.path.join(self.opt.checkpoints_load_dir, self.model_name)
-        self.results_save_dir = os.path.join(opt.results_dir, opt.phase)
+        self.results_save_dir = opt.results_dir
 
         self.loss_names = []
         self.visual_names = []
@@ -74,6 +62,11 @@ class ModelADT():
                 self.loss_criterion = torch.nn.MSELoss()
             elif self.opt.loss_type == "L1_offset_loss":
                 self.loss_criterion = torch.nn.L1Loss()
+            elif self.opt.loss_type == "L1_sumL2_cross":
+                self.loss_criterion = torch.nn.MSELoss()
+            elif self.opt.loss_type == "L2_sumL2_cross":
+                self.loss_criterion = torch.nn.MSELoss()
+                self.cross_loss_criterion = torch.nn.NLLLoss()
 
             # initialize optimizers
             self.optimizers = []
@@ -98,10 +91,6 @@ class ModelADT():
     def test(self):
         with torch.no_grad():
             self.forward()
-
-    # get image paths
-    def get_image_paths(self):
-        return self.image_paths
     
     def save_outputs(self):
         if not os.path.exists(self.results_save_dir):
@@ -165,10 +154,20 @@ class ModelADT():
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     # load models from the disk
-    def load_networks(self, epoch):
-        name = self.model_name
-        load_filename = '%s_net_%s.pth' % (epoch, name)
-        load_path = os.path.join(self.load_dir, load_filename)
+    def load_networks(self, epoch, load_dir=""):
+        """
+        epoch (int/str): epoch index / "best" / "latest"
+        """
+        assert isinstance(epoch,int) or epoch=="best" or epoch=="latest"
+        load_filename = f'{epoch}_net_{self.model_name}.pth'
+
+        if load_dir:
+            # use given load dir
+            load_path = os.path.join(load_dir, self.model_name, load_filename) 
+        else:
+            # use default load dir
+            load_path = os.path.join(self.load_dir, load_filename)
+
         net = self.net
         if isinstance(net, torch.nn.DataParallel):
             net = net.module
@@ -208,6 +207,7 @@ class ModelADT():
                 for param in net.parameters():
                     param.requires_grad = requires_grad
 
+    # Set the input and target data for the network to train on/evaluate against
     def set_data(self, input, target, convert=False, shuffle_channel=False):
         shape_in = input.shape
         if shuffle_channel:
@@ -221,6 +221,7 @@ class ModelADT():
         self.input = self.input.to(self.device)
         self.target = self.target.to(self.device)
 
+    # Define the forward pass to compute loss
     def forward(self):
         self.output = self.net(self.input)
         if self.opt.loss_type != "NoLoss":
@@ -233,6 +234,10 @@ class ModelADT():
             if self.opt.loss_type == "L2_sumL1":
                 self.loss += self.reg_loss_weight*torch.norm(self.output,p=1).div(self.output.numel())
                 self.reg_loss = self.reg_loss_weight*torch.norm(self.output,p=1).div(self.output.numel())
+
+            if self.opt.loss_type == "L1_sumL2_cross" or self.opt.loss_type == "L2_sumL2_cross":
+                self.loss += self.reg_loss_weight*torch.norm(self.output).div(self.output.numel())
+                self.loss += self.cross_loss_weight*self.cross_loss_criterion(self.output.flatten(start_dim=1),self.target.flatten(start_dim=1))
             
             if self.opt.loss_type == "L1_offset_loss" or self.opt.loss_type == "L2_offset_loss":
                 self.loss += self.reg_loss_weight*torch.norm(self.output).div(self.output.numel())
@@ -245,4 +250,3 @@ class ModelADT():
         self.backward()  
         self.optimizer.step()
         self.optimizer.zero_grad()
-

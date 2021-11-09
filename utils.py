@@ -4,31 +4,9 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
-# from util.image_pool import ImagePool
-from collections import OrderedDict
-import time
-# from options.train_options import TrainOptions
-from collections import defaultdict
-import h5py
-import scipy.io
-from torch.autograd import Variable
-import torch.optim as optim
 import numpy as np
-
-
-import torchvision
 import os
-from easydict import EasyDict as edict
-import random
-import matplotlib.pyplot as plt
-import sys
-import ntpath
-import time
-from scipy.misc import imresize
-import json
-
 from Generators import *
-from LocationNetworks import *
 
 def write_log(log_values, model_name, log_dir="", log_type='loss', type_write='a'):
     if not os.path.exists(log_dir):
@@ -39,11 +17,6 @@ def write_log(log_values, model_name, log_dir="", log_type='loss', type_write='a
 def get_model_funct(model_name):
     if model_name == "G":
         return define_G
-    else:
-        return define_L
-
-def define_L(opt, gpu_ids):
-    return LocationNetwork()
 
 def define_G(opt, gpu_ids):
     net = None
@@ -82,8 +55,6 @@ def define_G(opt, gpu_ids):
         raise NotImplementedError('Generator model name [%s] is not recognized' % net_type)
     return init_net(net, init_type, init_gain, gpu_ids)
 
-# In[6]:
-
 
 def get_scheduler(optimizer, opt):
     if opt.starting_epoch_count=='best' and opt.lr_policy == 'lambda':
@@ -109,9 +80,6 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-# In[7]:
-
-
 def get_norm_layer(norm_type='instance'):
     if norm_type == 'batch':
         norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
@@ -122,9 +90,6 @@ def get_norm_layer(norm_type='instance'):
     else:
         raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
     return norm_layer
-
-
-# In[8]:
 
 
 def init_weights(net, init_type='normal', gain=1):
@@ -151,9 +116,6 @@ def init_weights(net, init_type='normal', gain=1):
     net.apply(init_func)
 
 
-# In[9]:
-
-
 def init_net(net, init_type='normal', init_gain=1, gpu_ids=[]):
     if len(gpu_ids) > 0:
         assert(torch.cuda.is_available())
@@ -166,26 +128,21 @@ def init_net(net, init_type='normal', init_gain=1, gpu_ids=[]):
     return net
 
 def localization_error(output_predictions,input_labels,scale=0.1):
-    outputs = np.squeeze(output_predictions)
-    inputs = np.squeeze(input_labels)
-    image_size = outputs.shape
-    error = np.zeros((image_size[0]))
-    if(image_size[0]==161):
-        label_temp = inputs
-        pred_temp = outputs
+    """
+    output_predictions: (N,1,H,W), model prediction 
+    input_labels: (N,1,H,W), ground truth target
+    """
+    image_size = output_predictions.shape
+    error = np.zeros(image_size[0])
+
+    for i in range(image_size[0]):
+        label_temp = input_labels[i,:,:,:].squeeze() # ground truth label
+        pred_temp = output_predictions[i,:,:,:].squeeze() # model prediction
         label_index = np.asarray(np.unravel_index(np.argmax(label_temp), label_temp.shape))
         prediction_index = np.asarray(np.unravel_index(np.argmax(pred_temp),pred_temp.shape))
-        error[0] = np.sqrt( np.sum( np.power(np.multiply( label_index-prediction_index, scale ), 2)) )
-        return error
-    else:
-        for i in range(image_size[0]):
-
-            label_temp = inputs[i,:,:].squeeze()
-            pred_temp = outputs[i,:,:].squeeze()
-            label_index = np.asarray(np.unravel_index(np.argmax(label_temp), label_temp.shape))
-            prediction_index = np.asarray(np.unravel_index(np.argmax(pred_temp),pred_temp.shape))
-            error[i] = np.sqrt( np.sum( np.power(np.multiply( label_index-prediction_index, scale ), 2)) )
-        return error
+        error[i] = np.sqrt( np.sum( np.power(np.multiply( label_index-prediction_index, scale ), 2)) )
+    
+    return error
 
 class Flatten(nn.Module):
     def __init__(self):
@@ -193,3 +150,6 @@ class Flatten(nn.Module):
 
     def forward(self, x):
         return x.view(x.size(0), -1)
+
+def RGB2Gray(img):
+    return 0.2125*img[:,:,0] + 0.7154*img[:,:,1] + 0.0721*img[:,:,2]

@@ -1,42 +1,15 @@
 #!/usr/bin/python
-
 import torch
-import torch.nn as nn
-from torch.nn import init
-import functools
-from torch.optim import lr_scheduler
-# from util.image_pool import ImagePool
-from collections import OrderedDict
-import time
-# from options.train_options import TrainOptions
-from collections import defaultdict
-import h5py
-import scipy.io
-from torch.autograd import Variable
-import torch.optim as optim
-import numpy as np
-import torchvision
-import os
-from easydict import EasyDict as edict
-import random
-import matplotlib.pyplot as plt
-import sys
-import ntpath
-import time
-from scipy.misc import imresize
-import json
-
 from utils import *
-from modelADT import ModelADT
 from Generators import *
-from LocationNetworks import *
 from data_loader import *
 from params import *
 
-
 class Enc_Dec_Network():
 
-    def initialize(self, encoder, decoder, frozen_dec=False, frozen_enc=False, gpu_ids='1'):
+    def initialize(self, opt, encoder, decoder, frozen_dec=False, frozen_enc=False, gpu_ids='1'):
+        self.opt = opt
+        self.isTrain = opt.isTrain
         self.encoder = encoder
         self.decoder = decoder
         self.frozen_dec = frozen_dec
@@ -97,7 +70,7 @@ class Enc_2Dec_Network():
     def initialize(self, opt , encoder, decoder, offset_decoder, frozen_dec=False, frozen_enc=False, gpu_ids='1'):
         print('initializing Encoder and 2 Decoders Model')
         self.opt = opt
-        self.isTrain = opt.isTrain
+        self.isTrain = opt.isTrain      
         self.encoder = encoder
         self.decoder = decoder
         self.offset_decoder = offset_decoder
@@ -106,11 +79,14 @@ class Enc_2Dec_Network():
         self.device = torch.device('cuda:{}'.format(gpu_ids[0])) # if self.gpu_ids else torch.device('cpu')
         # self.encoder.net = encoder.net.to(self.device)
         # self.decoder.net = decoder.net.to(self.device)
+        self.results_save_dir = opt.results_dir
 
     def set_input(self, input, target ,offset_target ,convert_enc=True, shuffle_channel=True):
+        # features_w_offset, labels_gaussian_2d, features_wo_offset
+        # input,             target,             offset_target
         self.input = input.to(self.device)
         self.target = target.to(self.device)
-        self.offset_target = offset_target.to(self.device)
+        self.offset_target = offset_target.to(self.device)      
         self.encoder.set_data(self.input, self.input, convert=convert_enc, shuffle_channel=shuffle_channel)
     
     def save_networks(self, epoch):
@@ -136,7 +112,7 @@ class Enc_2Dec_Network():
         self.offset_decoder.forward()
     
     # Test the network once set into Evaluation mode!
-    def test(self):
+    def test(self):      
         self.encoder.test()
         self.decoder.set_data(self.encoder.output, self.target)
         self.offset_decoder.set_data(self.encoder.output, self.offset_target)

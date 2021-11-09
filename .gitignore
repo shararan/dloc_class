@@ -1,5 +1,23 @@
+<<<<<<< HEAD
 # custom gitignore
 *.DS_Store
+=======
+#Don't track content of these folders
+results/
+logs/
+runs/
+matlab/test_*
+
+# Compiled source #
+###################
+*.pt
+*.pth
+*.txt
+*.mat
+*.m~
+*.DS_Store
+*.yaml
+>>>>>>> b9381a7370d5061374b865cd6c28b242678e95eb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -140,7 +158,11 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+<<<<<<< HEAD
 # matlab gitignore
+=======
+# matlab gitinogre
+>>>>>>> b9381a7370d5061374b865cd6c28b242678e95eb
 # Windows default autosave extension
 *.asv
 

@@ -1,3 +1,10 @@
+'''
+Scripts for the training and testing functions
+train() function is called for training the network
+test() function is called to evaluate the network
+Both the function logs and saves the results in the files 
+as mentioned in the params.py file
+'''
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)

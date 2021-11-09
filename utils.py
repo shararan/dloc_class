@@ -1,4 +1,9 @@
 #!/usr/bin/python
+'''
+Contains the utilities used for
+loading, initating and running up the networks
+for all training, validation and evaluation.
+'''
 import torch
 import torch.nn as nn
 from torch.nn import init
@@ -31,26 +36,12 @@ def define_G(opt, gpu_ids):
 
     norm_layer = get_norm_layer(norm_type=norm)
 
-    if net_type == 'resnet_9blocks':
-        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9)
-    elif net_type == 'resnet_nblocks':
-        n_blocks    = opt.resnet_blocks
-        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks)
-    elif net_type == 'resnet2_nblocks':
-        n_blocks    = opt.resnet_blocks
-        net = ResnetGenerator2(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks)
-    elif net_type == 'resnet_6blocks':
-        net = ResnetGenerator(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6)
-    elif net_type == 'resnet_encoder':
+    if net_type == 'resnet_encoder':
         n_blocks    = opt.resnet_blocks
         net = ResnetEncoder(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks)
     elif net_type == 'resnet_decoder':
         n_blocks    = opt.resnet_blocks
         net = ResnetDecoder(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=n_blocks, encoder_blocks=opt.encoder_res_blocks)
-    elif net_type == 'unet_128':
-        net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
-    elif net_type == 'unet_256':
-        net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % net_type)
     return init_net(net, init_type, init_gain, gpu_ids)

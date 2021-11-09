@@ -1,10 +1,18 @@
 #!/usr/bin/python
+'''
+Defines a PyTorch graph for forward and backward propogation
+within the network encoders and decoders.
+'''
 import torch
 from utils import *
 from Generators import *
 from data_loader import *
 from params import *
 
+
+'''
+Class Definition for 1 Encoder and 1 Decoder joint model
+'''
 class Enc_Dec_Network():
 
     def initialize(self, opt, encoder, decoder, frozen_dec=False, frozen_enc=False, gpu_ids='1'):
@@ -63,8 +71,10 @@ class Enc_Dec_Network():
         self.decoder.set_data(self.encoder.output, self.target)
         self.decoder.forward()
 
-
-
+'''
+Class Definition for the final DLoc architecture with
+1 Encoder and 2 Decoders joint model
+'''
 class Enc_2Dec_Network():
 
     def initialize(self, opt , encoder, decoder, offset_decoder, frozen_dec=False, frozen_enc=False, gpu_ids='1'):

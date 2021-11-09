@@ -1,4 +1,8 @@
 #!/usr/bin/python
+'''
+Defines a generic wrapper class for all the network models
+Utilizes params.py to create, initiate, load and train the network.
+'''
 import torch
 from collections import OrderedDict
 import scipy.io
@@ -87,10 +91,6 @@ class ModelADT():
     def test(self):
         with torch.no_grad():
             self.forward()
-
-    # get image paths
-    def get_image_paths(self):
-        return self.image_paths
     
     def save_outputs(self):
         if not os.path.exists(self.results_save_dir):

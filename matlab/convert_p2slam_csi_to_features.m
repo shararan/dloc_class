@@ -22,95 +22,101 @@ LAMBDA = 3e8./FREQ;
 opt.lambda = LAMBDA;
 opt.freq = FREQ;
 opt.ant_sep = ANT_SEP;
+PROCESS_CHANNELS = 'True';
+PROCESS_FEATURES = 'True';
 %%
 % list of all the available dataq collections
 datasets = {'8-4-atkinson2','8-25-atkinson-4th-oneloop','8-26-atkinson-4th','8-28-edge-aps-3'};
 
 dataset = datasets{2};
-load(fullfile(DATA_LOAD_TOP,dataset,'channels_atk.mat'),'channels_cli','labels','ap');
-switch dataset
-    case '8-26-atkinson-4th'
-        n_points = 30000;
-    otherwise
-        n_points = size(channels_cli,1);
-end
-[~,n_sub,n_ap,n_ant,n_bot_ant] = size(channels_cli(1:n_points,:,:,:,:));
-channels_all = zeros(n_points*n_bot_ant, n_sub, n_ap, n_ant);
-labels_new = zeros(n_points*n_bot_ant, 2);
-gt_tof = zeros(n_points*n_bot_ant, n_ap);
-for i=1:n_bot_ant
-    channels_all(i:n_bot_ant:end-n_bot_ant+i, :, :, :) = squeeze(channels_cli(1:n_points,:,:,:,i));
-    labels_new(i:n_bot_ant:end-n_bot_ant+i, :) = labels(1:n_points, 1:2);
-end
-for i = 1:n_ap
-    gt_tof(:,i) = vecnorm(labels_new-mean(ap{i}),2,2);
-end
-clearvars channels_cli labels;
-%%
-x_width = max(labels_new(:,1)) - min(labels_new(:,1));
-y_width = max(labels_new(:,2)) - min(labels_new(:,2));
+if(PROCESS_CHANNELS)
+    load(fullfile(DATA_LOAD_TOP,dataset,'channels_atk.mat'),'channels_cli','labels','ap');
 
-x_min_new = min(labels_new(:,1)) - 0.5 * x_width;
-x_max_new = max(labels_new(:,1)) + 0.5 * x_width;
+    switch dataset
+        case '8-26-atkinson-4th'
+            n_points = 30000;
+        otherwise
+            n_points = size(channels_cli,1);
+    end
+    [~,n_sub,n_ap,n_ant,n_bot_ant] = size(channels_cli(1:n_points,:,:,:,:));
+    channels_all = zeros(n_points*n_bot_ant, n_sub, n_ap, n_ant);
+    labels_new = zeros(n_points*n_bot_ant, 2);
+    gt_tof = zeros(n_points*n_bot_ant, n_ap);
+    for i=1:n_bot_ant
+        channels_all(i:n_bot_ant:end-n_bot_ant+i, :, :, :) = squeeze(channels_cli(1:n_points,:,:,:,i));
+        labels_new(i:n_bot_ant:end-n_bot_ant+i, :) = labels(1:n_points, 1:2);
+    end
+    for i = 1:n_ap
+        gt_tof(:,i) = vecnorm(labels_new-mean(ap{i}),2,2);
+    end
+    clearvars channels_cli labels;
+    %%
+    x_width = max(labels_new(:,1)) - min(labels_new(:,1));
+    y_width = max(labels_new(:,2)) - min(labels_new(:,2));
 
-y_min_new = min(labels_new(:,2)) - 0.5 * y_width;
-y_max_new = max(labels_new(:,2)) + 0.5 * y_width;
+    x_min_new = min(labels_new(:,1)) - 0.5 * x_width;
+    x_max_new = max(labels_new(:,1)) + 0.5 * x_width;
 
-x_values = x_min_new:GRID_SIZE:x_max_new; % x axis grid points
-y_values = y_min_new:GRID_SIZE:y_max_new; % y axis grid points
+    y_min_new = min(labels_new(:,2)) - 0.5 * y_width;
+    y_max_new = max(labels_new(:,2)) + 0.5 * y_width;
 
-fprintf('original (x_min, x_max): (%f,%f), new (x_min, x_max): (%f,%f)\n',...
-    min(labels_new(:,1)),...
-    max(labels_new(:,1)),...
-    x_min_new,...
-    x_max_new)
-fprintf('original (y_min, y_max): (%f,%f), new (y_min, y_max): (%f,%f)\n',...
-    min(labels_new(:,2)),...
-    max(labels_new(:,2)),...
-    y_min_new,...
-    y_max_new)
-%%
-channels_wo_offset_all = zeros(size(channels_all));
-for i=1:n_points
-    for j=1:n_ap
-        P_tof = compute_distance_profile_music_fast(squeeze(channels_all(i,:,j,:)),LAMBDA,2,D_VALS,0.1);   
-        thresh = 0.5*max(abs(P_tof));
-        [pks_tof,vec_tof] = findpeaks(abs(P_tof),'MinPeakHeight',thresh);
-        if(isempty(vec_tof))
-            [~,vec_tof_temp] = max(abs(P_tof));
-            vec_tof = vec_tof_temp(1);
+    x_values = x_min_new:GRID_SIZE:x_max_new; % x axis grid points
+    y_values = y_min_new:GRID_SIZE:y_max_new; % y axis grid points
+
+    fprintf('original (x_min, x_max): (%f,%f), new (x_min, x_max): (%f,%f)\n',...
+        min(labels_new(:,1)),...
+        max(labels_new(:,1)),...
+        x_min_new,...
+        x_max_new)
+    fprintf('original (y_min, y_max): (%f,%f), new (y_min, y_max): (%f,%f)\n',...
+        min(labels_new(:,2)),...
+        max(labels_new(:,2)),...
+        y_min_new,...
+        y_max_new)
+    %%
+    channels_wo_offset_all = zeros(size(channels_all));
+    for i=1:n_points
+        for j=1:n_ap
+            P_tof = compute_distance_profile_music_fast(squeeze(channels_all(i,:,j,:)),LAMBDA,2,D_VALS,0.1);   
+            thresh = 0.5*max(abs(P_tof));
+            [pks_tof,vec_tof] = findpeaks(abs(P_tof),'MinPeakHeight',thresh);
+            if(isempty(vec_tof))
+                [~,vec_tof_temp] = max(abs(P_tof));
+                vec_tof = vec_tof_temp(1);
+            end
+
+            channels_wo_offset_all(i,:,j,:) = squeeze(channels_all(i,:,j,:)).*exp( 1j*2*pi*FREQ.'*( D_VALS(vec_tof(1)) - gt_tof(i,j) )./3e8 );
         end
-        
-        channels_wo_offset_all(i,:,j,:) = squeeze(channels_all(i,:,j,:)).*exp( 1j*2*pi*FREQ.'*( D_VALS(vec_tof(1)) - gt_tof(i,j) )./3e8 );
+
+        if(mod(i,1000)==0)
+            fprintf('Generating channels, sample %d\n',i);
+        end
     end
 
-    if(mod(i,1000)==0)
-        fprintf('Generating channels, sample %d\n',i);
+    if ~exist(fullfile(DATA_SAVE_TOP,dataset), 'dir')
+       mkdir(fullfile(DATA_SAVE_TOP,dataset))
+       mkdir(fullfile(DATA_SAVE_TOP,dataset,'channels'))
+    elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'channels'), 'dir')
+        mkdir(fullfile(DATA_SAVE_TOP,dataset,'channels'))
     end
-end
 
-if ~exist(fullfile(DATA_SAVE_TOP,dataset), 'dir')
-   mkdir(fullfile(DATA_SAVE_TOP,dataset))
-   mkdir(fullfile(DATA_SAVE_TOP,dataset,'channels'))
-elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'channels'), 'dir')
-    mkdir(fullfile(DATA_SAVE_TOP,dataset,'channels'))
-end
-
-n_points_per_set = ceil(n_points/10);
-for n_set=1:10
-    if n_set<10
-        channels = channels_all((n_set-1)*10+(1:n_points_per_set),:,:,:);
-        channels_wo_offset = channels_wo_offset_all((n_set-1)*10+(1:n_points_per_set),:,:,:);
-        labels = labels_new((n_set-1)*10+(1:n_points_per_set),:);
-    else
-        channels = channels_all((n_set-1)*10+1:end,:,:,:);
-        channels_wo_offset = channels_wo_offset_all((n_set-1)*10+1:end,:,:,:);
-        labels = labels_new((n_set-1)*10+1:end,:);
+    n_points_per_set = ceil(n_points/10);
+    for n_set=1:10
+        if n_set<10
+            channels = channels_all((n_set-1)*10+(1:n_points_per_set),:,:,:);
+            channels_wo_offset = channels_wo_offset_all((n_set-1)*10+(1:n_points_per_set),:,:,:);
+            labels = labels_new((n_set-1)*10+(1:n_points_per_set),:);
+        else
+            channels = channels_all((n_set-1)*10+1:end,:,:,:);
+            channels_wo_offset = channels_wo_offset_all((n_set-1)*10+1:end,:,:,:);
+            labels = labels_new((n_set-1)*10+1:end,:);
+        end
+        save(fullfile(DATA_SAVE_TOP,dataset,'channels',['subset',num2str(n_set),'.mat']),'channels','channels_wo_offset','labels','ap','opt','x_values','y_values','-v7.3')
     end
-    save(fullfile(DATA_SAVE_TOP,dataset,'channels',['subset',num2str(n_set),'.mat']),'channels','channels_wo_offset','labels','ap','opt','x_values','y_values','-v7.3')
+    clear channels channels_all channels_wo_offset channels_wo_offset_all
 end
-clear channels channels_all channels_wo_offset channels_wo_offset_all
 %% Get features
+if(PROCESS_FEATURES)
 if ~exist(fullfile(DATA_SAVE_TOP,dataset), 'dir')
    mkdir(fullfile(DATA_SAVE_TOP,dataset))
 elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'features'), 'dir')
@@ -243,4 +249,5 @@ for n_set = 1:10
             end
     end
 %             save(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.mat']),'channels','channels_wo_offset','labels','x_values','y_values','-v7.3')
+end
 end

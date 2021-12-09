@@ -9,7 +9,7 @@ BATCH_SIZE = 32; % batch size for the 'batch' storage
 N_CHUNKS = 50; % number of chunks for the 'chunks' storage
 DATA_LOAD_TOP = '/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk'; % top level data directory
 DATA_SAVE_TOP = '/media/ehdd_8t1/chenfeng/DLoc_data/'; % top level data directory
-THETA_VALS = [-pi/2:0.01:pi/2];
+THETA_VALS = -pi/2:0.01:pi/2;
 D_VALS = -5:0.25:65;
 ANT_SEP = 0.0259;
 SUB_INDCS = [-122:-104,-102:-76,-74:-40,-38:-12,-10:-2,2:10,12:38,40:74,76:102,104:122];% 80MHz
@@ -22,8 +22,8 @@ LAMBDA = 3e8./FREQ;
 opt.lambda = LAMBDA;
 opt.freq = FREQ;
 opt.ant_sep = ANT_SEP;
-PROCESS_CHANNELS = 'True';
-PROCESS_FEATURES = 'True';
+PROCESS_CHANNELS = 0;
+PROCESS_FEATURES = 1;
 %%
 % list of all the available dataq collections
 datasets = {'8-4-atkinson2','8-25-atkinson-4th-oneloop','8-26-atkinson-4th','8-28-edge-aps-3'};
@@ -125,7 +125,7 @@ end
 n_start = 0;
 for n_set = 1:10
     load(fullfile(DATA_SAVE_TOP,dataset,'channels',['subset',num2str(n_set),'.mat']));
-    n_points = size(channels,1);
+    [n_points,n_sub,n_ap,n_ant] = size(channels);
     tic
     features_w_offset_all = zeros(n_points,n_ap,length(y_values),length(x_values));
     features_wo_offset_all = zeros(n_points,n_ap,length(y_values),length(x_values));

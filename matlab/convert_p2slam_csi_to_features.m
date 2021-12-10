@@ -17,6 +17,7 @@ GRID_SIZE = 0.25;
 CHAN = 155;
 BW = 80e6;
 AP_INDEX = 2;
+OUTPUT_SIGMA = 0.25;
 FREQ = double(5e9 + 5*CHAN*1e6) + SUB_INDCS.*BW./256; % 80MHz
 LAMBDA = 3e8./FREQ;
 opt.lambda = LAMBDA;
@@ -123,7 +124,7 @@ elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'features'), 'dir')
     mkdir(fullfile(DATA_SAVE_TOP,dataset,'features'))
 end
 n_start = 0;
-for n_set = 1:10
+for n_set = 1:N_CHUNKS
     load(fullfile(DATA_SAVE_TOP,dataset,'channels',['subset',num2str(n_set),'.mat']));
     [n_points,n_sub,n_ap,n_ant] = size(channels);
     tic

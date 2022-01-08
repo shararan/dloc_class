@@ -75,6 +75,7 @@ if(PROCESS_CHANNELS)
         y_min_new,...
         y_max_new)
     %%
+    n_points = size(channels_all,1);
     channels_wo_offset_all = zeros(size(channels_all));
     for i=1:n_points
         for j=1:n_ap
@@ -100,17 +101,17 @@ if(PROCESS_CHANNELS)
     elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'channels'), 'dir')
         mkdir(fullfile(DATA_SAVE_TOP,dataset,'channels'))
     end
-
+    n_points = size(channels_all,1);
     n_points_per_set = ceil(n_points/10);
     for n_set=1:10
         if n_set<10
-            channels = channels_all((n_set-1)*10+(1:n_points_per_set),:,:,:);
-            channels_wo_offset = channels_wo_offset_all((n_set-1)*10+(1:n_points_per_set),:,:,:);
-            labels = labels_new((n_set-1)*10+(1:n_points_per_set),:);
-        else
-            channels = channels_all((n_set-1)*10+1:end,:,:,:);
-            channels_wo_offset = channels_wo_offset_all((n_set-1)*10+1:end,:,:,:);
-            labels = labels_new((n_set-1)*10+1:end,:);
+            channels = channels_all((n_set-1)*n_points_per_set+(1:n_points_per_set),:,:,:);
+            channels_wo_offset = channels_wo_offset_all((n_set-1)*n_points_per_set+(1:n_points_per_set),:,:,:);
+            labels = labels_new((n_set-1)*n_points_per_set+(1:n_points_per_set),:);
+        elseif n_set==10
+            channels = channels_all((n_set-1)*n_points_per_set+1:end,:,:,:);
+            channels_wo_offset = channels_wo_offset_all((n_set-1)*n_points_per_set+1:end,:,:,:);
+            labels = labels_new((n_set-1)*n_points_per_set+1:end,:);
         end
         save(fullfile(DATA_SAVE_TOP,dataset,'channels',['subset',num2str(n_set),'.mat']),'channels','channels_wo_offset','labels','ap','opt','x_values','y_values','-v7.3')
     end
@@ -165,10 +166,14 @@ for n_set = 1:N_CHUNKS
     %save types 'individual'/'batch'/'chunks'
     switch STORE_TYPE
         case 'chunks'
-            h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/features_w_offset',size(features_w_offset_all));
-            h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/features_wo_offset',size(features_wo_offset_all));
-            h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/labels',size(labels));
-            h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/labels_gaussian_2d',size(labels_gaussian_2d_all));
+            try
+                h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/features_w_offset',size(features_w_offset_all));
+                h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/features_wo_offset',size(features_wo_offset_all));
+                h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/labels',size(labels));
+                h5create(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/labels_gaussian_2d',size(labels_gaussian_2d_all));
+            catch
+                disp('Files already Exist')
+            end
 
             h5write(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/features_w_offset',features_w_offset_all);
             h5write(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.h5']),'/features_wo_offset',features_wo_offset_all);
@@ -185,22 +190,26 @@ for n_set = 1:N_CHUNKS
             for i=1:BATCH_SIZE:n_points-BATCH_SIZE
                 start_idx = i;
                 stop_idx = i+BATCH_SIZE-1;
-                features_wo_offset = features_all_wo(start_idx:stop_idx,:,:,:);
-                features_w_offset = features_all_w(start_idx:stop_idx,:,:,:);
+                features_wo_offset = features_wo_offset_all(start_idx:stop_idx,:,:,:);
+                features_w_offset = features_w_offset_all(start_idx:stop_idx,:,:,:);
                 labels_gaussian_2d = labels_gaussian_2d_all(start_idx:stop_idx,:,:);
                 labels_discrete = labels(start_idx:stop_idx,:,:);
                 if (mod(i,1000)==0)
                     fprintf('Saving....BAtch%d.h5\n',int32(stop_idx/BATCH_SIZE));
                 end
                 fname = [num2str(int32(stop_idx/BATCH_SIZE)),'.h5'];
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
-                    '/features_w_offset',size(features_w_offset));
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
-                    '/features_wo_offset',size(features_wo_offset));
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
-                    '/labels',size(labels_discrete));
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
-                    '/labels_gaussian_2d',size(labels_gaussian_2d));
+                try
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
+                        '/features_w_offset',size(features_w_offset));
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
+                        '/features_wo_offset',size(features_wo_offset));
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
+                        '/labels',size(labels_discrete));
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
+                        '/labels_gaussian_2d',size(labels_gaussian_2d));
+                catch
+                    disp('Files already exist');
+                end
 
                 h5write(fullfile(DATA_SAVE_TOP,dataset,'features','batch',fname),...
                     '/features_w_offset',features_w_offset);
@@ -220,23 +229,27 @@ for n_set = 1:N_CHUNKS
             elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'features','ind'), 'dir')
                 mkdir(fullfile(DATA_SAVE_TOP,dataset,'features','ind'))
             end
-            parfor i=1:n_points
-                features_wo_offset = features_all_wo(i,:,:,:);
-                features_w_offset = features_all_w(i,:,:,:);
+            for i=1:n_points
+                features_wo_offset = features_wo_offset_all(i,:,:,:);
+                features_w_offset = features_w_offset_all(i,:,:,:);
                 labels_gaussian_2d = labels_gaussian_2d_all(i,:,:);
                 labels_discrete = labels(i,:,:);
                 if (mod(i,1000)==0)
-                    fprintf('Saving....%d.h5\n',i);
+                    fprintf('Saving....%d.h5\n',i+n_start);
                 end
-                fname = [num2str(i),'.h5'];
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
-                    '/features_w_offset',size(features_w_offset));
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
-                    '/features_wo_offset',size(features_wo_offset));
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
-                    '/labels',size(labels_discrete));
-                h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
-                    '/labels_gaussian_2d',size(labels_gaussian_2d));
+                fname = [num2str((i+n_start)),'.h5'];
+                try
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
+                        '/features_w_offset',size(features_w_offset));
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
+                        '/features_wo_offset',size(features_wo_offset));
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
+                        '/labels',size(labels_discrete));
+                    h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
+                        '/labels_gaussian_2d',size(labels_gaussian_2d));
+                catch
+                    disp('Files already exist');
+                end
 
                 h5write(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
                     '/features_w_offset',features_w_offset);
@@ -249,6 +262,7 @@ for n_set = 1:N_CHUNKS
 
             end
     end
+    n_start = n_start + n_points;
 %             save(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.mat']),'channels','channels_wo_offset','labels','x_values','y_values','-v7.3')
 end
 end

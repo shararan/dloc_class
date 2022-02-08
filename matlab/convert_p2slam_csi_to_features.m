@@ -4,6 +4,7 @@ clearvars;
 close all;
 warning('off','signal:findpeaks:largeMinPeakHeight');
 %%
+N_CSI_CHUNKS = 20;
 STORE_TYPE = 'individual'; % store each datapoint 'individual'/'batch'/'chunks'
 BATCH_SIZE = 32; % batch size for the 'batch' storage
 N_CHUNKS = 50; % number of chunks for the 'chunks' storage
@@ -23,13 +24,15 @@ LAMBDA = 3e8./FREQ;
 opt.lambda = LAMBDA;
 opt.freq = FREQ;
 opt.ant_sep = ANT_SEP;
-PROCESS_CHANNELS = 0;
+PROCESS_CHANNELS = 1;
 PROCESS_FEATURES = 1;
 %%
 % list of all the available dataq collections
 datasets = {'8-4-atkinson2','8-25-atkinson-4th-oneloop','8-26-atkinson-4th','8-28-edge-aps-3'};
 
-dataset = datasets{2};
+for data_number = 4
+disp(['Working with ', datasets{data_number}, ' dataset'])
+dataset = datasets{data_number};
 if(PROCESS_CHANNELS)
     load(fullfile(DATA_LOAD_TOP,dataset,'channels_atk.mat'),'channels_cli','labels','ap');
 
@@ -37,16 +40,22 @@ if(PROCESS_CHANNELS)
         case '8-26-atkinson-4th'
             n_points = 30000;
         otherwise
+            dataset = [dataset, '_1ant'];
             n_points = size(channels_cli,1);
     end
     [~,n_sub,n_ap,n_ant,n_bot_ant] = size(channels_cli(1:n_points,:,:,:,:));
-    channels_all = zeros(n_points*n_bot_ant, n_sub, n_ap, n_ant);
-    labels_new = zeros(n_points*n_bot_ant, 2);
-    gt_tof = zeros(n_points*n_bot_ant, n_ap);
-    for i=1:n_bot_ant
-        channels_all(i:n_bot_ant:end-n_bot_ant+i, :, :, :) = squeeze(channels_cli(1:n_points,:,:,:,i));
-        labels_new(i:n_bot_ant:end-n_bot_ant+i, :) = labels(1:n_points, 1:2);
-    end
+%     channels_all = zeros(n_points*n_bot_ant, n_sub, n_ap, n_ant);
+%     labels_new = zeros(n_points*n_bot_ant, 2);
+%     gt_tof = zeros(n_points*n_bot_ant, n_ap);
+%     channels_all = zeros(n_points, n_sub, n_ap, n_ant);
+%     labels_new = zeros(n_points, 2);
+    gt_tof = zeros(n_points, n_ap);
+%     for i=1:n_bot_ant
+%         channels_all(i:n_bot_ant:end-n_bot_ant+i, :, :, :) = squeeze(channels_cli(1:n_points,:,:,:,i));
+%         labels_new(i:n_bot_ant:end-n_bot_ant+i, :) = labels(1:n_points, 1:2);
+%     end
+    channels_all = squeeze(channels_cli(1:n_points,:,:,:,1));
+    labels_new = labels(1:n_points, 1:2);
     for i = 1:n_ap
         gt_tof(:,i) = vecnorm(labels_new-mean(ap{i}),2,2);
     end
@@ -102,13 +111,13 @@ if(PROCESS_CHANNELS)
         mkdir(fullfile(DATA_SAVE_TOP,dataset,'channels'))
     end
     n_points = size(channels_all,1);
-    n_points_per_set = ceil(n_points/10);
-    for n_set=1:10
-        if n_set<10
+    n_points_per_set = ceil(n_points/N_CSI_CHUNKS);
+    for n_set=1:N_CSI_CHUNKS
+        if n_set<N_CSI_CHUNKS
             channels = channels_all((n_set-1)*n_points_per_set+(1:n_points_per_set),:,:,:);
             channels_wo_offset = channels_wo_offset_all((n_set-1)*n_points_per_set+(1:n_points_per_set),:,:,:);
             labels = labels_new((n_set-1)*n_points_per_set+(1:n_points_per_set),:);
-        elseif n_set==10
+        elseif n_set==N_CSI_CHUNKS
             channels = channels_all((n_set-1)*n_points_per_set+1:end,:,:,:);
             channels_wo_offset = channels_wo_offset_all((n_set-1)*n_points_per_set+1:end,:,:,:);
             labels = labels_new((n_set-1)*n_points_per_set+1:end,:);
@@ -125,7 +134,8 @@ elseif ~exist(fullfile(DATA_SAVE_TOP,dataset,'features'), 'dir')
     mkdir(fullfile(DATA_SAVE_TOP,dataset,'features'))
 end
 n_start = 0;
-for n_set = 1:N_CHUNKS
+for n_set = 1:N_CSI_CHUNKS
+    disp(['Working with ',num2str(n_set),' CSI chunk of data'])
     load(fullfile(DATA_SAVE_TOP,dataset,'channels',['subset',num2str(n_set),'.mat']));
     [n_points,n_sub,n_ap,n_ant] = size(channels);
     tic
@@ -150,7 +160,7 @@ for n_set = 1:N_CHUNKS
             AP_INDEX,...
             opt);
 
-        if(mod(i,1000)==0)
+        if(mod(i,500)==0)
             fprintf('Generating features, sample %d\n',i);
         end
     end
@@ -237,7 +247,7 @@ for n_set = 1:N_CHUNKS
                 if (mod(i,1000)==0)
                     fprintf('Saving....%d.h5\n',i+n_start);
                 end
-                fname = [num2str((i+n_start)),'.h5'];
+                fname = [num2str(i+n_start),'.h5'];
                 try
                     h5create(fullfile(DATA_SAVE_TOP,dataset,'features','ind',fname),...
                         '/features_w_offset',size(features_w_offset));
@@ -262,7 +272,10 @@ for n_set = 1:N_CHUNKS
 
             end
     end
+    clearvars features_w_offset_all features_wo_offset_all labels_gaussian_2d
     n_start = n_start + n_points;
 %             save(fullfile(DATA_SAVE_TOP,dataset,'features',['subset',num2str(n_set),'.mat']),'channels','channels_wo_offset','labels','x_values','y_values','-v7.3')
 end
+end
+
 end

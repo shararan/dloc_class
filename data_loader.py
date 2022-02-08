@@ -52,7 +52,7 @@ class DLocDataset(Dataset):
     def __len__(self):
         all_files = 0
         for i in self.root_dir:
-            onlyfiles = next(os.walk(self.root_dir))[2] #dir is your directory path as string
+            onlyfiles = next(os.walk(i))[2] #dir is your directory path as string
             self.n_files.append(len(onlyfiles))
         return np.sum(self.n_files)
 

@@ -7,6 +7,7 @@ read the README in `params_storage` folder.
 '''
 
 import torch
+from torchvision import transforms
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
@@ -14,6 +15,8 @@ from utils import *
 from modelADT import ModelADT
 from Generators import *
 from data_loader import load_data
+from data_loader import DLocDataset
+from data_loader import ToTensor
 from joint_model import Enc_2Dec_Network
 from joint_model import Enc_Dec_Network
 from params import *
@@ -26,6 +29,7 @@ Defining the paths from where to Load Data.
 Assumes that the data is stored in a subfolder called data in the current data folder
 '''
 
+'''
 #####################################Final Simple Space Results################################################
 if "data" in opt_exp and opt_exp.data == "rw_to_rw_atk":
     # Training and testing data loaded for the Final results For Env-1 (The smaller space) in the paper (Figure 10a)
@@ -114,60 +118,77 @@ elif "data" in opt_exp and opt_exp.data == "data_segment":
 
 ######################################################################################################################
 '''
-Loading Training and Evaluation Data into their respective Dataloaders
+# Loading Training and Evaluation Data into their respective Dataloaders
+'''
 '''
 # load traning data
 
-trainpath = ['/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-25-atkinson-4th-oneloop/ap_data_mat/200',
-            '/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-25-atkinson-4th-oneloop/ap_data_mat/201',
-            '/media/ehdd_8t1/aarun/Research/data/p2slam_realworld/p2slam_atk/8-25-atkinson-4th-oneloop/ap_data_mat/203']
+trainpath = ['/media/datadisk/Roshan/datasets/DLoc_sim_data/features/jacobs_July28/',
+             '/media/datadisk/Roshan/datasets/DLoc_sim_data/features/jacobs_July28_2/']
+
+validpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dataset_jacobs_July28/features/ind_valid/']
+
+testpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dataset_jacobs_July28/features/ind_test/']
 
 
 
-transformed_dataset = DLocDataset(root_dir=trainpath,
-                                  transform=transforms.Compose([
-                                  ToTensor()
-                                  ]))
+train_data = DLocDataset(root_dir=trainpath,
+                          transform=transforms.Compose([ToTensor()]))
+
+valid_data = DLocDataset(root_dir=validpath,
+                          transform=transforms.Compose([ToTensor()]))
 
 
 
-B_train,A_train,labels_train = load_data(trainpath[0], 0, 0, 0, 1)
+# B_train,A_train,labels_train = load_data(trainpath[0], 0, 0, 0, 1)
 
-for i in range(len(trainpath)-1):
-    f,f1,l = load_data(trainpath[i+1], 0, 0, 0, 1)
-    B_train = torch.cat((B_train, f), 0)
-    A_train = torch.cat((A_train, f1), 0)
-    labels_train = torch.cat((labels_train, l), 0)
+# for i in range(len(trainpath)-1):
+#     f,f1,l = load_data(trainpath[i+1], 0, 0, 0, 1)
+#     B_train = torch.cat((B_train, f), 0)
+#     A_train = torch.cat((A_train, f1), 0)
+#     labels_train = torch.cat((labels_train, l), 0)
 
-labels_train = torch.unsqueeze(labels_train, 1)
+# labels_train = torch.unsqueeze(labels_train, 1)
 
-train_data = torch.utils.data.TensorDataset(B_train, A_train, labels_train)
+# train_data = torch.utils.data.TensorDataset(B_train, A_train, labels_train)
 train_loader =torch.utils.data.DataLoader(train_data, batch_size=opt_exp.batch_size, shuffle=True)
+sample = train_data[[1]]
 
-print(f"A_train.shape: {A_train.shape}")
-print(f"B_train.shape: {B_train.shape}")
-print(f"labels_train.shape: {labels_train.shape}")
+print('Length of training data = %d' % len(train_data))
+print(f"Size of features wo offset {sample['features_wo_offset'].size()}")
+print(f"Size of features w offset  {sample['features_w_offset'].size()}")
+print(f"Size of labels             {sample['labels_gaussian_2d'].size()}")
 print('# training mini batch = %d' % len(train_loader))
 
+# Load Validation data
+valid_loader =torch.utils.data.DataLoader(valid_data, batch_size=opt_exp.batch_size, shuffle=True)
+sample = valid_data[[1]]
+
+print('Length of Validation data = %d' % len(valid_data))
+print(f"Size of features wo offset {sample['features_wo_offset'].size()}")
+print(f"Size of features w offset  {sample['features_w_offset'].size()}")
+print(f"Size of labels             {sample['labels_gaussian_2d'].size()}")
+print('# validation mini batch = %d' % len(valid_loader))
+
 # load testing data
-B_test,A_test,labels_test = load_data(testpath[0], 0, 0, 0, 1)
+# B_test,A_test,labels_test = load_data(testpath[0], 0, 0, 0, 1)
 
-for i in range(len(testpath)-1):
-    f,f1,l = load_data(testpath[i+1], 0, 0, 0, 1)
-    B_test = torch.cat((B_test, f), 0)
-    A_test = torch.cat((A_test, f1), 0)
-    labels_test = torch.cat((labels_test, l), 0)
+# for i in range(len(testpath)-1):
+#     f,f1,l = load_data(testpath[i+1], 0, 0, 0, 1)
+#     B_test = torch.cat((B_test, f), 0)
+#     A_test = torch.cat((A_test, f1), 0)
+#     labels_test = torch.cat((labels_test, l), 0)
 
-labels_test = torch.unsqueeze(labels_test, 1)
+# labels_test = torch.unsqueeze(labels_test, 1)
 
-# create data loader
-test_data = torch.utils.data.TensorDataset(B_test, A_test, labels_test)
-test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=False)
-print(f"A_test.shape: {A_test.shape}")
-print(f"B_test.shape: {B_test.shape}")
-print(f"labels_test.shape: {labels_test.shape}")
-print('# testing mini batch = %d' % len(test_loader))
-print('Test Data Loaded')
+# # create data loader
+# test_data = torch.utils.data.TensorDataset(B_test, A_test, labels_test)
+# test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=False)
+# print(f"A_test.shape: {A_test.shape}")
+# print(f"B_test.shape: {B_test.shape}")
+# print(f"labels_test.shape: {labels_test.shape}")
+# print('# testing mini batch = %d' % len(test_loader))
+# print('Test Data Loaded')
 
 '''
 Initiate the Network and build the graph
@@ -202,9 +223,8 @@ elif opt_exp.n_decoders == 1:
 
 else:
     print('Incorrect number of Decoders specified in the parameters')
-    return -1
 
-if opt_exp.isFrozen:
+if opt_exp.continue_train:
     enc_model.load_networks(opt_encoder.starting_epoch_count)
     dec_model.load_networks(opt_decoder.starting_epoch_count)
     if opt_exp.n_decoders == 2:
@@ -214,11 +234,26 @@ if opt_exp.isFrozen:
 '''
 Trainig the network
 '''
-trainer.train(joint_model, train_loader, test_loader)
+trainer.train(joint_model, train_loader, valid_loader)
 
 '''
 Model Evaluation at the best epoch
 '''
+
+
+# Load Testing data
+test_data = DLocDataset(root_dir=testpath,
+                          transform=transforms.Compose([ToTensor()]))
+
+test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=True)
+sample = test_data[[1]]
+
+print('Length of Testing data = %d' % len(test_data))
+print(f"Size of features wo offset {sample['features_wo_offset'].size()}")
+print(f"Size of features w offset  {sample['features_w_offset'].size()}")
+print(f"Size of labels             {sample['labels_gaussian_2d'].size()}")
+print('# testing mini batch = %d' % len(test_loader))
+
 
 epoch = "best"  # int/"best"/"last"
 # load network

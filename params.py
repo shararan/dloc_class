@@ -15,7 +15,7 @@ opt_exp.starting_epoch_count = 0 #type=int, default=1, help='the starting epoch 
 opt_exp.save_latest_freq = 5000 #type=int, default=5000, help='frequency of saving the latest results')
 opt_exp.save_epoch_freq = 1 #type=int, default=5, help='frequency of saving checkpoints at the end of epochs')
 opt_exp.n_epochs = 50 #type=int, default=50, help='# of Epochs to run the training for')
-opt_exp.gpu_ids = ['1','2','3','0'] #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
+opt_exp.gpu_ids = ['1','2','3'] #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
 opt_exp.data = "rw_to_rw" #type=str, default='rw_to_rw', help='Dataset loader, switch case system [rw_to_rw|rw_to_rw_atk|rw_to_rw_env2|rw_to_rw_env3|rw_to_rw_env4|rw_to_rw_40|rw_to_rw_20|data_segment]')
 opt_exp.n_decoders = 2 #type=int, default=2, help='# of Decoders to be used [1:Only Location Decoder|2:Both Location and Consistency Decoder]')
 
@@ -26,7 +26,7 @@ opt_exp.weight_decay = 1e-5 #type=float, default=1e-5, help='weight decay parame
 
 # ------ name of experiment ----------
 opt_exp.save_name = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()) # experiment name when train_and_test.py is ran
-opt_exp.checkpoints_dir = join('./runs', opt_exp.save_name) # trained models are saved here
+opt_exp.checkpoints_dir = join('/media/ehdd_8t1/chenfeng/DLoc_sims_test/runs', opt_exp.save_name) # trained models are saved here
 opt_exp.results_dir = opt_exp.checkpoints_dir # the resulting images from the offset decoder and the decoder are saved here
 opt_exp.log_dir = opt_exp.checkpoints_dir # the logs of the median, 90th, 99th percentile errors, compensation ecoder and location decoder losses are saved for each epoch and each batch here
 opt_exp.load_dir = opt_exp.checkpoints_dir # when loading a pre-trained model it is loaded from here
@@ -44,7 +44,7 @@ opt_encoder.init_type = 'xavier' #type=str, default='normal', help='network init
 opt_encoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_encoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_encoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_encoder.lr = 0.00001 #type=float, default=0.0002, help='initial learning rate for adam')
+opt_encoder.lr = 0.0001 #type=float, default=0.0002, help='initial learning rate for adam')
 opt_encoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_encoder.lr_decay_iters = 50 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_encoder.lambda_L = 1 #type=float, default=1, help='weightage given to the Generator')

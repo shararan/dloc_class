@@ -18,10 +18,10 @@ class ModelADT():
     def initialize(self, opt):
         
         self.opt = opt
-#        self.gpu_ids = opt.gpu_ids
-        gpu_ids = []
-        for i in range(torch.cuda.device_count()):
-            gpu_ids.append(str(i))
+        self.gpu_ids = opt.gpu_ids
+        # gpu_ids = []
+        # for i in range(torch.cuda.device_count()):
+        #     gpu_ids.append(str(i))
         print(gpu_ids)
         self.gpu_ids = gpu_ids
         self.isTrain = opt.isTrain

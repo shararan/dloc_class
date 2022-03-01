@@ -43,13 +43,13 @@ def train(model, train_loader, test_loader):
         for i, data in enumerate(train_loader):
             total_steps += model.opt.batch_size
             if opt_exp.n_decoders == 2:
-                model.set_input(data[input_index], data[output_index], data[offset_output_index], shuffle_channel=False)
+                model.set_input(data['features_w_offset'], data['labels_gaussian_2d'], data['features_wo_offset'], shuffle_channel=False)
             elif opt_exp.n_decoders == 1:
-                model.set_input(data[input_index], data[output_index], shuffle_channel=False)
+                model.set_input(data['features_w_offset'], data['labels_gaussian_2d'], shuffle_channel=False)
             model.optimize_parameters()
             dec_outputs = model.decoder.output
             # print(f"dec_outputs size is : {dec_outputs.shape}")
-            error.extend(localization_error(dec_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
+            error.extend(localization_error(dec_outputs.data.cpu().numpy(),data['labels_gaussian_2d'].cpu().numpy(),scale=0.1))
 
             write_log([str(model.decoder.loss.item())], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='loss')
             if opt_exp.n_decoders == 2:
@@ -133,9 +133,9 @@ def test(model, test_loader, save_output=True, save_name="decoder_test_result", 
     error =[]
     for i, data in enumerate(test_loader):
         if opt_exp.n_decoders == 2:
-                model.set_input(data[input_index], data[output_index], data[offset_output_index], shuffle_channel=False)
-            elif opt_exp.n_decoders == 1:
-                model.set_input(data[input_index], data[output_index], shuffle_channel=False)
+                model.set_input(data['features_w_offset'], data['labels_gaussian_2d'], data['features_wo_offset'], shuffle_channel=False)
+        elif opt_exp.n_decoders == 1:
+                model.set_input(data['features_w_offset'], data['labels_gaussian_2d'], shuffle_channel=False)
         model.test()
 
         # get model outputs
@@ -146,7 +146,7 @@ def test(model, test_loader, save_output=True, save_name="decoder_test_result", 
         generated_outputs.extend(gen_outputs.data.cpu().numpy())
         if opt_exp.n_decoders == 2:
             offset_outputs.extend(off_outputs.data.cpu().numpy())
-        error.extend(localization_error(gen_outputs.data.cpu().numpy(),data[output_index].cpu().numpy(),scale=0.1))
+        error.extend(localization_error(gen_outputs.data.cpu().numpy(),data['labels_gaussian_2d'].cpu().numpy(),scale=0.1))
         total_loss += model.decoder.loss.item()
         if opt_exp.n_decoders == 2:
             total_offset_loss += model.offset_decoder.loss.item()

@@ -151,7 +151,10 @@ valid_data = DLocDataset(root_dir=validpath,
 # labels_train = torch.unsqueeze(labels_train, 1)
 
 # train_data = torch.utils.data.TensorDataset(B_train, A_train, labels_train)
-train_loader =torch.utils.data.DataLoader(train_data, batch_size=opt_exp.batch_size, shuffle=True)
+train_loader =torch.utils.data.DataLoader(train_data,
+                                          batch_size=opt_exp.batch_size,
+                                          shuffle=True,
+                                          num_workers=opt_exp.num_thread)
 sample = train_data[[1]]
 
 print('Length of training data = %d' % len(train_data))
@@ -161,7 +164,10 @@ print(f"Size of labels             {sample['labels_gaussian_2d'].size()}")
 print('# training mini batch = %d' % len(train_loader))
 
 # Load Validation data
-valid_loader =torch.utils.data.DataLoader(valid_data, batch_size=opt_exp.batch_size, shuffle=True)
+valid_loader =torch.utils.data.DataLoader(valid_data,
+                                          batch_size=opt_exp.batch_size,
+                                          shuffle=True,
+                                          num_workers=opt_exp.num_thread)
 sample = valid_data[[1]]
 
 print('Length of Validation data = %d' % len(valid_data))
@@ -245,7 +251,10 @@ Model Evaluation at the best epoch
 test_data = DLocDataset(root_dir=testpath,
                           transform=transforms.Compose([ToTensor()]))
 
-test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=True)
+test_loader =torch.utils.data.DataLoader(test_data,
+                                          batch_size=opt_exp.batch_size,
+                                          shuffle=False,
+                                          num_workers=opt_exp.num_thread)
 sample = test_data[[1]]
 
 print('Length of Testing data = %d' % len(test_data))

@@ -15,7 +15,7 @@ opt_exp.starting_epoch_count = 0 #type=int, default=1, help='the starting epoch 
 opt_exp.save_latest_freq = 5000 #type=int, default=5000, help='frequency of saving the latest results')
 opt_exp.save_epoch_freq = 1 #type=int, default=5, help='frequency of saving checkpoints at the end of epochs')
 opt_exp.n_epochs = 50 #type=int, default=50, help='# of Epochs to run the training for')
-opt_exp.gpu_ids = ['1','2','3'] #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
+opt_exp.gpu_ids = ['1','2','3','0'] #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
 opt_exp.data = "rw_to_rw" #type=str, default='rw_to_rw', help='Dataset loader, switch case system [rw_to_rw|rw_to_rw_atk|rw_to_rw_env2|rw_to_rw_env3|rw_to_rw_env4|rw_to_rw_40|rw_to_rw_20|data_segment]')
 opt_exp.n_decoders = 2 #type=int, default=2, help='# of Decoders to be used [1:Only Location Decoder|2:Both Location and Consistency Decoder]')
 
@@ -23,7 +23,7 @@ opt_exp.batch_size = 32 #type=int, default=32, help='batch size for training and
 opt_exp.ds_step_trn = 1 #type=int, default=1, help='data sub-sampling number for the training data')
 opt_exp.ds_step_tst = 1 #type=int, default=1, help='data sub-sampling number for the testing data')
 opt_exp.weight_decay = 1e-5 #type=float, default=1e-5, help='weight decay parameter for the Adam optimizer')
-
+opt_exp.num_threads = 12 #default=12, type=int, help='# threads for loading data')
 # ------ name of experiment ----------
 opt_exp.save_name = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()) # experiment name when train_and_test.py is ran
 opt_exp.checkpoints_dir = join('/media/ehdd_8t1/chenfeng/DLoc_sims_test/runs', opt_exp.save_name) # trained models are saved here
@@ -69,7 +69,7 @@ opt_encoder.niter_decay = 100 #type=int, default=100, help='# of iter to linearl
 
 
 opt_encoder.gpu_ids = opt_encoder.parent_exp.gpu_ids #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
-opt_encoder.num_threads = 4 #default=4, type=int, help='# threads for loading data')
+opt_encoder.num_threads = opt_encoder.parent_exp.num_threads #default=4, type=int, help='# threads for loading data')
 opt_encoder.checkpoints_load_dir =  opt_encoder.parent_exp.load_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_encoder.checkpoints_save_dir =  opt_encoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_encoder.results_dir = opt_encoder.parent_exp.results_dir
@@ -119,7 +119,7 @@ opt_decoder.niter_decay = 100 #type=int, default=100, help='# of iter to linearl
 
 
 opt_decoder.gpu_ids = opt_decoder.parent_exp.gpu_ids #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
-opt_decoder.num_threads = 4 #default=4, type=int, help='# threads for loading data')
+opt_decoder.num_threads = opt_decoder.parent_exp.num_threads #default=4, type=int, help='# threads for loading data')
 opt_decoder.checkpoints_load_dir =  opt_decoder.parent_exp.load_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_decoder.checkpoints_save_dir =  opt_decoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_decoder.results_dir = opt_decoder.parent_exp.results_dir
@@ -168,7 +168,7 @@ opt_offset_decoder.niter_decay = 100 #type=int, default=100, help='# of iter to 
 
 
 opt_offset_decoder.gpu_ids = opt_offset_decoder.parent_exp.gpu_ids #type=str, default=['1','2','3','0'], help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-opt_offset_decoder.num_threads = 4 #default=4, type=int, help='# threads for loading data')
+opt_offset_decoder.num_threads =  opt_offset_decoder.parent_exp.num_threads#default=4, type=int, help='# threads for loading data')
 opt_offset_decoder.checkpoints_load_dir =  opt_offset_decoder.parent_exp.load_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_offset_decoder.checkpoints_save_dir =  opt_offset_decoder.parent_exp.checkpoints_dir #type=str, default='./checkpoints', help='models are saved here')
 opt_offset_decoder.results_dir = opt_offset_decoder.parent_exp.results_dir

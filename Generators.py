@@ -78,7 +78,7 @@ class ResnetDecoder(nn.Module):
 
         mult = 2**n_downsampling
         for i in range(n_blocks):
-            if i <= encoder_blocks:
+            if i < encoder_blocks:
                 continue
             model += [ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)]
 

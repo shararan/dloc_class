@@ -16,7 +16,7 @@ from utils import *
 from Generators import *
 from params import *
 
-def train(model, train_loader, test_loader):
+def train(model, train_loader, test_loader, experiment):
     """Traning pipeline
 
     Args:
@@ -71,16 +71,22 @@ def train(model, train_loader, test_loader):
         if opt_exp.n_decoders == 2:
             epoch_offset_loss /= i
         write_log([str(epoch_loss)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='epoch_decoder_loss')
+        experiment.log_metric("epoch_decoder_loss",epoch_loss, epoch)
         if opt_exp.n_decoders == 2:
             write_log([str(epoch_offset_loss)], model.offset_decoder.model_name, log_dir=model.offset_decoder.opt.log_dir, log_type='epoch_offset_decoder_loss')
+            experiment.log_metric("epoch_offset_decoder_loss",epoch_offset_loss, epoch)
         write_log([str(median_error_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_median_error')
+        experiment.log_metric("train_median_error",median_error_tr, epoch)
         write_log([str(error_90th_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_90th_error')
+        experiment.log_metric("train_90th_error",error_90th_tr, epoch)
         write_log([str(error_99th_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_99th_error')
+        experiment.log_metric("train_99th_error",error_99th_tr, epoch)
         write_log([str(nighty_percentile_error_tr)], model.decoder.model_name, log_dir=model.decoder.opt.log_dir, log_type='train_90_error')
+        experiment.log_metric("train_90_error",nighty_percentile_error_tr, epoch)
         if (epoch==1):
-            min_eval_loss, median_error = test(model, test_loader, save_output=False)
+            min_eval_loss, median_error = valid(model, epoch, test_loader, save_output=False, experiment)
         else:
-            new_eval_loss, new_med_error = test(model, test_loader, save_output=False)
+            new_eval_loss, new_med_error = valid(model, epoch, test_loader, save_output=False, experiment)
             if (median_error>=new_med_error):
                 stopping_count = stopping_count+1
                 median_error = new_med_error
@@ -103,7 +109,7 @@ def train(model, train_loader, test_loader):
             model.offset_decoder.update_learning_rate()
 
 
-def test(model, test_loader, save_output=True, save_name="decoder_test_result", save_dir="", log=True):
+def valid(model, epoch, test_loader, save_output=True, save_name="decoder_test_result", save_dir="", log=True, experiment):
     """Test and evaluation pipeline
 
     Args:
@@ -159,11 +165,100 @@ def test(model, test_loader, save_output=True, save_name="decoder_test_result", 
 
     if log:
         write_log([str(median_error)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_median_error')
+        experiment.log_metric("valid_median_error",median_error, epoch)
         write_log([str(nighty_percentile_error)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_90_error')
+        experiment.log_metric("valid_90_error",nighty_percentile_error, epoch)
         write_log([str(error_99th)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_99_error')
+        experiment.log_metric("valid_99_error",error_99th, epoch)
         write_log([str(total_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_loss')
+        experiment.log_metric("valid_loss",total_loss, epoch)
         if opt_exp.n_decoders == 2:
             write_log([str(total_offset_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_offset_loss')
+            experiment.log_metric("valid_offset_loss",total_offset_loss, epoch)
+
+    if save_output:
+        if not save_dir:
+            save_dir = model.decoder.results_save_dir # default save directory
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir, exist_ok=True)
+        
+        save_path = f"{save_dir}/{save_name}.mat"
+        hdf5storage.savemat(save_path,
+            mdict={"outputs":generated_outputs,"wo_outputs":offset_outputs, "error": error}, 
+            appendmat=True, 
+            format='7.3',
+            truncate_existing=True)
+        print(f"result saved in {save_path}")
+    return total_loss, median_error
+
+
+def test(model, test_loader, save_output=True, save_name="decoder_test_result", save_dir="", log=True, experiment):
+    """Test and evaluation pipeline
+
+    Args:
+        model (torch.module): pytorch model
+        test_loader (torch.dataloader): dataloader
+        save_output (bool, optional): whether to save output to mat file. Defaults to True.
+        save_name (str, optional): name of the mat file. Defaults to "decoder_test_result".
+        save_dir (str, optional): directory where output mat file is saved. Defaults to "".
+        log (bool, optional): whether to log output. Defaults to True.
+
+    Returns:
+        tuple: (total_loss -> float, median_error -> float)
+    """
+    print('Evaluation Called')
+    model.eval()
+
+    # set data index
+    offset_output_index=0
+    input_index=1
+    output_index=2
+
+    # create containers
+    generated_outputs = []
+    offset_outputs = []
+    total_loss = 0
+    total_offset_loss = 0
+    error =[]
+    for i, data in enumerate(test_loader):
+        if opt_exp.n_decoders == 2:
+                model.set_input(data['features_w_offset'], data['labels_gaussian_2d'], data['features_wo_offset'], shuffle_channel=False)
+        elif opt_exp.n_decoders == 1:
+                model.set_input(data['features_w_offset'], data['labels_gaussian_2d'], shuffle_channel=False)
+        model.test()
+
+        # get model outputs
+        gen_outputs = model.decoder.output  # gen_outputs.size = (N,1,H,W)
+        if opt_exp.n_decoders == 2:
+            off_outputs = model.offset_decoder.output # off_outputs.size = (N,n_ap,H,W)
+
+        generated_outputs.extend(gen_outputs.data.cpu().numpy())
+        if opt_exp.n_decoders == 2:
+            offset_outputs.extend(off_outputs.data.cpu().numpy())
+        error.extend(localization_error(gen_outputs.data.cpu().numpy(),data['labels_gaussian_2d'].cpu().numpy(),scale=0.1))
+        total_loss += model.decoder.loss.item()
+        if opt_exp.n_decoders == 2:
+            total_offset_loss += model.offset_decoder.loss.item()
+    total_loss /= i
+    if opt_exp.n_decoders == 2:
+        total_offset_loss /= i
+    median_error = np.median(error)
+    nighty_percentile_error = np.percentile(error,90)
+    error_99th = np.percentile(error,99)
+
+    if log:
+        write_log([str(median_error)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_median_error')
+        experiment.log_metric("test_median_error",median_error)
+        write_log([str(nighty_percentile_error)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_90_error')
+        experiment.log_metric("test_90_error",nighty_percentile_error)
+        write_log([str(error_99th)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_99_error')
+        experiment.log_metric("test_99_error",error_99th)
+        write_log([str(total_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_loss')
+        experiment.log_metric("test_loss",total_loss)
+        if opt_exp.n_decoders == 2:
+            write_log([str(total_offset_loss)], model.decoder.model_name, log_dir=model.opt.log_dir, log_type='test_offset_loss')
+            experiment.log_metric("test_offset_loss",total_offset_loss)
 
     if save_output:
         if not save_dir:

@@ -18,6 +18,7 @@ opt_exp.n_epochs = 50 #type=int, default=50, help='# of Epochs to run the traini
 opt_exp.gpu_ids = ['1','2','3','0'] #type=tuple of char, default=['1','2','3','0'], help='gpu ids: e.g. ['0']  ['0','1','2'], ['0','2']. CPU implementation is not supported. gpu_ids[0] is used for loading the network and the rest for DataParellilization')
 opt_exp.data = "rw_to_rw" #type=str, default='rw_to_rw', help='Dataset loader, switch case system [rw_to_rw|rw_to_rw_atk|rw_to_rw_env2|rw_to_rw_env3|rw_to_rw_env4|rw_to_rw_40|rw_to_rw_20|data_segment]')
 opt_exp.n_decoders = 2 #type=int, default=2, help='# of Decoders to be used [1:Only Location Decoder|2:Both Location and Consistency Decoder]')
+opt_exp.lr = 0.0001
 
 opt_exp.batch_size = 32 #type=int, default=32, help='batch size for training and testing the network')
 opt_exp.ds_step_trn = 1 #type=int, default=1, help='data sub-sampling number for the training data')
@@ -44,7 +45,7 @@ opt_encoder.init_type = 'xavier' #type=str, default='normal', help='network init
 opt_encoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_encoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_encoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_encoder.lr = 0.0001 #type=float, default=0.0002, help='initial learning rate for adam')
+opt_encoder.lr = opt_encoder.parent_exp.lr #type=float, default=0.0002, help='initial learning rate for adam')
 opt_encoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_encoder.lr_decay_iters = 50 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_encoder.lambda_L = 1 #type=float, default=1, help='weightage given to the Generator')
@@ -93,7 +94,7 @@ opt_decoder.init_type = 'xavier' #type=str, default='normal', help='network init
 opt_decoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_decoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_decoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_decoder.lr = opt_encoder.lr  #type=float, default=0.0002, help='initial learning rate for adam')
+opt_decoder.lr = opt_decoder.parent_exp.lr  #type=float, default=0.0002, help='initial learning rate for adam')
 opt_decoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_decoder.lr_decay_iters = 20 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_decoder.lambda_L = 1 #type=float, default=1, help='weightage given to the Generator')
@@ -142,7 +143,7 @@ opt_offset_decoder.init_type = 'xavier' #type=str, default='normal', help='netwo
 opt_offset_decoder.init_gain = 0.02 #type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
 opt_offset_decoder.norm = 'instance' #type=str, default='instance', help='instance normalization or batch normalization')
 opt_offset_decoder.beta1 = 0.5 #type=float, default=0.5, help='momentum term of adam')
-opt_offset_decoder.lr = opt_encoder.lr #type=float, default=0.0002, help='initial learning rate for adam')
+opt_offset_decoder.lr = opt_offset_decoder.parent_exp.lr #type=float, default=0.0002, help='initial learning rate for adam')
 opt_offset_decoder.lr_policy = 'step' #type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
 opt_offset_decoder.lr_decay_iters = 50 #type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 opt_offset_decoder.lambda_L = 1 # weightage given to the Generator

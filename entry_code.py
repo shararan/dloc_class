@@ -6,6 +6,7 @@ For further details onto which params file to load
 read the README in `params_storage` folder.
 '''
 
+from comet_ml import Experiment
 import torch
 from torchvision import transforms
 import warnings
@@ -21,114 +22,46 @@ from joint_model import Enc_2Dec_Network
 from joint_model import Enc_Dec_Network
 from params import *
 import trainer
+
 torch.manual_seed(0)
 np.random.seed(0)
+
+
+hyper_params = {
+    "exp_time_name": opt_exp.save_name,
+    "input_data": opt_exp.data,
+    "learning_rate": opt_exp.lr,
+    "num_layers": opt_exp.n_decoders,
+    "decoder_loss": opt_decoder.loss_type,
+    "decoder_lambda": opt_decoder.lambda_L,
+    "decoder_reg": opt_decoder.lambda_reg,
+    "batch_size": opt_exp.batch_size,
+    "num_epochs": opt_exp.n_epochs,
+    "offset_decoder_loss": opt_offset_decoder.loss_type,
+    "offset_decoder_lambda": opt_offset_decoder.lambda_L,
+    "offset_decoder_reg": opt_offset_decoder.lambda_reg
+}
+
+
+experiment = Experiment(project_name="DLoc_s2r")
+experiment.log_parameters(hyper_params)
 
 '''
 Defining the paths from where to Load Data.
 Assumes that the data is stored in a subfolder called data in the current data folder
 '''
-
-'''
-#####################################Final Simple Space Results################################################
-if "data" in opt_exp and opt_exp.data == "rw_to_rw_atk":
-    # Training and testing data loaded for the Final results For Env-1 (The smaller space) in the paper (Figure 10a)
-    trainpath = ['./data/dataset_non_fov_train_July18.mat',
-                './data/dataset_fov_train_July18.mat']
-    testpath = ['./data/dataset_non_fov_test_July18.mat',
-                './data/dataset_fov_test_July18.mat']
-    print('Real World to Real World experiments started')
-
-#####################################Final Complex Space Results################################################
-elif "data" in opt_exp and opt_exp.data == "rw_to_rw":
-    # Training and testing data loaded for the Final results For Env-2 (The larger space) in the paper (Figure 10b)
-    trainpath = ['./data/dataset_edit_jacobs_July28.mat',
-                './data/dataset_non_fov_train_jacobs_July28_2.mat',
-                './data/dataset_fov_train_jacobs_July28_2.mat']
-    testpath = ['./data/dataset_fov_test_jacobs_July28_2.mat',
-                './data/dataset_non_fov_test_jacobs_July28_2.mat']
-    print('Real World to Real World experiments started')
-
-#########################################Generalization across Scenarios###########################################
-
-elif "data" in opt_exp and opt_exp.data == "rw_to_rw_env2":
-    # Training and testing data loaded for the Final results For Env-2
-    # for Generalization across scenarios (Table-1) train on 1/3/4 and test on 2
-    trainpath = ['./data/dataset_edit_jacobs_July28.mat',
-                './data/dataset_non_fov_train_jacobs_July28_2.mat',
-                './data/dataset_fov_train_jacobs_July28_2.mat',
-                './data/dataset_train_jacobs_Aug16_3.mat',
-                './data/dataset_train_jacobs_Aug16_4_ref.mat']
-    testpath = ['./data/dataset_train_jacobs_Aug16_1.mat']
-    print('Real World to Real World experiments started')
-
-
-elif "data" in opt_exp and opt_exp.data == "rw_to_rw_env3":
-    # Training and testing data loaded for the Final results For Env-2
-    # for Generalization across scenarios (Table-1) train on 1/2/4 and test on 3
-    trainpath = ['./data/dataset_edit_jacobs_July28.mat',
-                './data/dataset_non_fov_train_jacobs_July28_2.mat',
-                './data/dataset_fov_train_jacobs_July28_2.mat',
-                './data/dataset_train_jacobs_Aug16_1.mat',
-                './data/dataset_train_jacobs_Aug16_4_ref.mat']
-    testpath = ['./data/dataset_train_jacobs_Aug16_3.mat']
-    print('Real World to Real World experiments started')
-
-elif "data" in opt_exp and opt_exp.data == "rw_to_rw_env4":
-    # Training and testing data loaded for the Final results For Env-2
-    # for Generalization across scenarios (Table-1) train on 1/2/3 and test on 4
-    trainpath = ['./data/dataset_edit_jacobs_July28.mat',
-                './data/dataset_non_fov_train_jacobs_July28_2.mat',
-                './data/dataset_fov_train_jacobs_July28_2.mat',
-                './data/dataset_train_jacobs_Aug16_1.mat',
-                './data/dataset_train_jacobs_Aug16_3.mat']
-    testpath = ['./data/dataset_train_jacobs_Aug16_4_ref.mat']
-    print('Real World to Real World experiments started')
-
-######################################Generalization Across Bandwidth##########################################
-
-elif "data" in opt_exp and opt_exp.data == "rw_to_rw_40":
-    # Training and testing data loaded for the Generalization results For Env-2 (The larger space) in the paper (Figure 13a) at 40MHz
-    trainpath = ['./data/dataset40_edit_jacobs_July28.mat',
-                './data/dataset40_non_fov_train_jacobs_July28_2.mat',
-                './data/dataset40_fov_train_jacobs_July28_2.mat']
-    testpath = ['./data/dataset40_fov_test_jacobs_July28_2.mat',
-                './data/dataset40_non_fov_test_jacobs_July28_2.mat']
-    print('Real World to Real World experiments started')
-
-elif "data" in opt_exp and opt_exp.data == "rw_to_rw_20":
-    # Training and testing data loaded for the Generalization results For Env-2 (The larger space) in the paper (Figure 13a) at 20MHz
-    trainpath = ['./data/dataset20_edit_jacobs_July28.mat',
-                './data/dataset20_non_fov_train_jacobs_July28_2.mat',
-                './data/dataset20_fov_train_jacobs_July28_2.mat']
-    testpath = ['./data/dataset20_fov_test_jacobs_July28_2.mat',
-                './data/dataset20_non_fov_test_jacobs_July28_2.mat']
-    print('Real World to Real World experiments started')
-
-######################################Generalization Across Space##########################################
-
-elif "data" in opt_exp and opt_exp.data == "data_segment":
-    # Training and testing data loaded for the Final results For Env-2 
-    # for Disjoint Training and Testing(The larger space) in the paper (Figure 13b)
-    trainpath = ['./data/dataset_test_jacobs_July28.mat',
-                './data/dataset_test_jacobs_July28_2.mat']
-    testpath = ['./data/dataset_train_jacobs_July28.mat',
-                './data/dataset_train_jacobs_July28_2.mat']
-    print('non-FOV to non-FOV experiments started')
-
-######################################################################################################################
-'''
-# Loading Training and Evaluation Data into their respective Dataloaders
-'''
-'''
-# load traning data
-
 trainpath = ['/media/datadisk/Roshan/datasets/DLoc_sim_data/features/jacobs_July28/',
              '/media/datadisk/Roshan/datasets/DLoc_sim_data/features/jacobs_July28_2/']
 
 validpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dataset_jacobs_July28/features/ind_valid/']
 
 testpath = ['/media/ehdd_8t1/chenfeng/DLoc_data/dataset_jacobs_July28/features/ind_test/']
+
+
+# Loading Training and Evaluation Data into their respective Dataloaders
+'''
+'''
+# load traning data
 
 
 
@@ -139,18 +72,6 @@ valid_data = DLocDataset(root_dir=validpath,
                           transform=transforms.Compose([ToTensor()]))
 
 
-
-# B_train,A_train,labels_train = load_data(trainpath[0], 0, 0, 0, 1)
-
-# for i in range(len(trainpath)-1):
-#     f,f1,l = load_data(trainpath[i+1], 0, 0, 0, 1)
-#     B_train = torch.cat((B_train, f), 0)
-#     A_train = torch.cat((A_train, f1), 0)
-#     labels_train = torch.cat((labels_train, l), 0)
-
-# labels_train = torch.unsqueeze(labels_train, 1)
-
-# train_data = torch.utils.data.TensorDataset(B_train, A_train, labels_train)
 train_loader =torch.utils.data.DataLoader(train_data,
                                           batch_size=opt_exp.batch_size,
                                           shuffle=True,
@@ -175,26 +96,6 @@ print(f"Size of features wo offset {sample['features_wo_offset'].size()}")
 print(f"Size of features w offset  {sample['features_w_offset'].size()}")
 print(f"Size of labels             {sample['labels_gaussian_2d'].size()}")
 print('# validation mini batch = %d' % len(valid_loader))
-
-# load testing data
-# B_test,A_test,labels_test = load_data(testpath[0], 0, 0, 0, 1)
-
-# for i in range(len(testpath)-1):
-#     f,f1,l = load_data(testpath[i+1], 0, 0, 0, 1)
-#     B_test = torch.cat((B_test, f), 0)
-#     A_test = torch.cat((A_test, f1), 0)
-#     labels_test = torch.cat((labels_test, l), 0)
-
-# labels_test = torch.unsqueeze(labels_test, 1)
-
-# # create data loader
-# test_data = torch.utils.data.TensorDataset(B_test, A_test, labels_test)
-# test_loader =torch.utils.data.DataLoader(test_data, batch_size=opt_exp.batch_size, shuffle=False)
-# print(f"A_test.shape: {A_test.shape}")
-# print(f"B_test.shape: {B_test.shape}")
-# print(f"labels_test.shape: {labels_test.shape}")
-# print('# testing mini batch = %d' % len(test_loader))
-# print('Test Data Loaded')
 
 '''
 Initiate the Network and build the graph
@@ -240,7 +141,7 @@ if opt_exp.continue_train:
 '''
 Trainig the network
 '''
-trainer.train(joint_model, train_loader, valid_loader)
+trainer.train(joint_model, train_loader, valid_loader, experiment)
 
 '''
 Model Evaluation at the best epoch
@@ -275,10 +176,11 @@ elif opt_exp.n_decoders == 1:
     joint_model.initialize(opt_exp, enc_model, dec_model, gpu_ids = opt_exp.gpu_ids)
 
 # pass data through model
-total_loss, median_error = trainer.test(joint_model, 
+total_loss, median_error = trainer.test(joint_model,
     test_loader, 
     save_output=True,
     save_dir=eval_name,
     save_name=f"decoder_test_result_epoch_{epoch}",
-    log=False)
+    log=False,
+    experiment)
 print(f"total_loss: {total_loss}, median_error: {median_error}")

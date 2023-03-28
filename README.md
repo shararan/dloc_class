@@ -20,6 +20,8 @@ To train the model(s) in the paper and evaluate them, run this command:
 ```train_test
 python entry_code.py
 ```
+FOR THE CLASSIFICATION MODEL:
+Changes to the original have been made to Generators.py, utils.py, trainer.py, modelADT.py, data_loader.py and params.py
 
 The file automatically imports the parameters from [params.py](params.py).
 

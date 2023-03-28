@@ -3,9 +3,12 @@
 Defines a generic wrapper class for all the network models
 Utilizes params.py to create, initiate, load and train the network.
 '''
+from doctest import OutputChecker
 import torch
+import torchvision
 from collections import OrderedDict
 import scipy.io
+# from torchvision.ops import distance_box_iou_loss, generalized_box_iou_loss
 from torch.autograd import Variable
 import os
 from Generators import *
@@ -13,7 +16,7 @@ from utils import *
 
 class ModelADT():
     def name(self):
-        return 'Pix2PixModel'
+        return 'S2RModel'
 
     def initialize(self, opt):
         
@@ -22,8 +25,8 @@ class ModelADT():
         # gpu_ids = []
         # for i in range(torch.cuda.device_count()):
         #     gpu_ids.append(str(i))
-        print(gpu_ids)
-        self.gpu_ids = gpu_ids
+        # print(gpu_ids)
+        # self.gpu_ids = gpu_ids
         self.isTrain = opt.isTrain
         self.loss_weight = opt.lambda_L
         self.reg_loss_weight = opt.lambda_reg
@@ -67,6 +70,16 @@ class ModelADT():
             elif self.opt.loss_type == "L2_sumL2_cross":
                 self.loss_criterion = torch.nn.MSELoss()
                 self.cross_loss_criterion = torch.nn.NLLLoss()
+            elif self.opt.loss_type == "C_IoU" or self.opt.loss_type == "G_IoU_sumL2":
+                self.loss_criterion = torch.nn.MSELoss()
+            elif self.opt.loss_type == "GaussianNLL":
+                self.loss_criterion = torch.nn.GaussianNLLLoss()
+            elif self.opt.loss_type == "AoA_loss":
+                self.loss_criterion = torch.nn.L1Loss()
+            elif self.opt.loss_type == "Cross_Entropy":
+                self.loss_criterion = torch.nn.CrossEntropyLoss()
+            elif self.opt.loss_type == "KL_Div":
+                self.loss_criterion = torch.nn.KLDivLoss()
 
             # initialize optimizers
             self.optimizers = []
@@ -156,7 +169,7 @@ class ModelADT():
     # load models from the disk
     def load_networks(self, epoch, load_dir=""):
         """
-        epoch (int/str): epoch index / "best" / "latest"
+        epoch (int/str): epoch index / "best" / "last"
         """
         assert isinstance(epoch,int) or epoch=="best" or epoch=="latest"
         load_filename = f'{epoch}_net_{self.model_name}.pth'
@@ -224,9 +237,9 @@ class ModelADT():
     # Define the forward pass to compute loss
     def forward(self):
         self.output = self.net(self.input)
-        if self.opt.loss_type != "NoLoss":
-            self.loss = self.loss_weight*self.loss_criterion(self.output, self.target)
-
+        
+        if self.opt.loss_type != "NoLoss" and "IoU" not in self.opt.loss_type and self.opt.loss_type != "GaussianNLL":
+            self.loss = self.loss_weight * self.loss_criterion(self.output, self.target)
             if self.opt.loss_type == "L1_sumL2" or self.opt.loss_type == "L2_sumL2":
                 self.loss += self.reg_loss_weight*torch.norm(self.output).div(self.output.numel())
                 self.reg_loss = self.reg_loss_weight*torch.norm(self.output).div(self.output.numel())
@@ -241,12 +254,28 @@ class ModelADT():
             
             if self.opt.loss_type == "L1_offset_loss" or self.opt.loss_type == "L2_offset_loss":
                 self.loss += self.reg_loss_weight*torch.norm(self.output).div(self.output.numel())
+            
+            
+        # elif self.opt.loss_type == "C_IoU":
+        #     # self.loss = self.loss_weight * self.loss_criterion(self.output, self.target)
+        #     box = torch.tensor([self.opt.parent_exp.box_width, self.opt.parent_exp.box_height]).repeat(self.output.shape[0], 1).to(self.device)
+        #     self.loss = torch.sum(self.cross_loss_weight * generalized_box_iou_loss(torch.cat((self.output, box), dim=1), torch.cat((self.target, box), dim=1)))
+        #     self.loss += self.loss_weight * self.loss_criterion(self.output, self.target)
+        # elif self.opt.loss_type == "G_IoU_sumL2":
+        #     box = torch.tensor([self.opt.parent_exp.box_width, self.opt.parent_exp.box_height]).repeat(self.output.shape[0], 1).to(self.device)
+        #     self.loss = torch.sum(self.cross_loss_weight * generalized_box_iou_loss(torch.cat((self.output, box), dim=1), torch.cat((self.target, box), dim=1)))
+        #     print(box)
+        #     print(self.output)
+        #     self.loss += self.loss_weight * self.loss_criterion(self.output, self.target)
+        elif self.opt.loss_type == "GaussianNLL":
+            var = torch.ones(self.target.shape[0], self.target.shape[1], requires_grad=True).to(self.device)
+            self.loss = self.loss_weight * self.loss_criterion(self.target, self.output, var)
 
     def backward(self):
         self.loss.backward(retain_graph=True)
     
     def optimize_parameters(self):
         self.forward()
-        self.backward()  
+        self.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
